@@ -470,7 +470,7 @@ class CheckForEndVotingPatch
                 else if ((player.GetCustomRole().IsCrewmate() || player.Is(CustomRoles.Admired)) && !player.Is(CustomRoles.Rebel))
                     name = string.Format(GetString("IsGood"), realName);
 
-                else if ((player.GetCustomRole().IsNeutral() || player.Is(CustomRoles.Rebel) || (player.GetCustomRole().IsConverted() && player.Is(CustomRoles.Soulless))) && !player.GetCustomRole().IsMadmate())
+                else if ((player.GetCustomRole().IsNeutral() || player.Is(CustomRoles.Rebel) || (player.GetCustomRole().IsConverted() && !player.Is(CustomRoles.Soulless))) && !player.GetCustomRole().IsMadmate())
                     name = string.Format(GetString("BelongTo"), realName, ColorString(new Color32(127, 140, 141, byte.MaxValue), GetString("TeamNeutral")));
 
                 break;
@@ -481,7 +481,7 @@ class CheckForEndVotingPatch
                     name += " (";
                     if (player.GetCustomRole().IsImpostor() || player.GetCustomRole().IsMadmate() || player.Is(CustomRoles.Madmate))
                         name += ColorString(new Color32(255, 25, 25, byte.MaxValue), GetString("TeamImpostor"));
-                    else if ((player.GetCustomRole().IsNeutral() || player.Is(CustomRoles.Rebel) || (player.GetCustomRole().IsConverted() && player.Is(CustomRoles.Soulless))) && !player.GetCustomRole().IsMadmate())
+                    else if ((player.GetCustomRole().IsNeutral() || player.Is(CustomRoles.Rebel) || (player.GetCustomRole().IsConverted() && !player.Is(CustomRoles.Soulless))) && !player.GetCustomRole().IsMadmate())
                         name += ColorString(new Color32(127, 140, 141, byte.MaxValue), GetString("TeamNeutral"));
                     else if ((player.GetCustomRole().IsCrewmate() || player.Is(CustomRoles.Admired)) && !player.Is(CustomRoles.Rebel))
                         name += ColorString(new Color32(140, 255, 255, byte.MaxValue), GetString("TeamCrewmate"));
