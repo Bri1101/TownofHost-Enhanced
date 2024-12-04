@@ -310,6 +310,14 @@ class BeginCrewmatePatch
             __instance.overlayHandle.color = Palette.ImpostorRed;
             return false;
         }
+        if (PlayerControl.LocalPlayer.Is(CustomRoles.Rebel))
+        {
+            teamToDisplay = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
+            teamToDisplay.Add(PlayerControl.LocalPlayer);
+            __instance.BeginImpostor(teamToDisplay);
+            __instance.overlayHandle.color = new Color32(255, 26, 27, byte.MaxValue);
+            return false;
+        }
         else if (PlayerControl.LocalPlayer.IsNeutralApocalypse())
         {
             var apocTeam = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
@@ -469,6 +477,14 @@ class BeginCrewmatePatch
             __instance.ImpostorText.gameObject.SetActive(true);
             __instance.ImpostorText.text = GetString("SubText.Madmate");
         }
+        if (PlayerControl.LocalPlayer.Is(CustomRoles.Rebel))
+        {
+            __instance.TeamTitle.text = GetString("TeamRebel");
+            __instance.TeamTitle.color = __instance.BackgroundBar.material.color = new Color32(255, 26, 27, byte.MaxValue);
+            PlayerControl.LocalPlayer.Data.Role.IntroSound = GetIntroSound(RoleTypes.Shapeshifter);
+            __instance.ImpostorText.gameObject.SetActive(true);
+            __instance.ImpostorText.text = GetString("SubText.Rebel");
+        }
 
         if (Options.CurrentGameMode == CustomGameMode.FFA)
         {
@@ -532,6 +548,13 @@ class BeginImpostorPatch
             yourTeam = new();
             yourTeam.Add(PlayerControl.LocalPlayer);
             __instance.overlayHandle.color = Palette.ImpostorRed;
+            return true;
+        }
+        if (PlayerControl.LocalPlayer.Is(CustomRoles.Rebel))
+        {
+            yourTeam = new();
+            yourTeam.Add(PlayerControl.LocalPlayer);
+            __instance.overlayHandle.color = new Color32(255, 26, 27, byte.MaxValue);
             return true;
         }
 

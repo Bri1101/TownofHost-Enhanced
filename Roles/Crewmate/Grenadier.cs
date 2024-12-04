@@ -66,9 +66,9 @@ internal class Grenadier : RoleBase
         // Grenadier or Mad Grenadier enter the vent
         if ((GrenadierBlinding.Any() &&
             (player.GetCustomRole().IsImpostor() ||
-            (player.GetCustomRole().IsNeutral() && GrenadierCanAffectNeutral.GetBool()))
+            ((player.GetCustomRole().IsNeutral() || player.Is(CustomRoles.Rebel)) && GrenadierCanAffectNeutral.GetBool()))
             )
-            || (MadGrenadierBlinding.Any() && !player.GetCustomRole().IsImpostorTeam() && !player.Is(CustomRoles.Madmate)))
+            || (MadGrenadierBlinding.Any() && !player.GetCustomRole().IsImpostorTeamV3() && !player.Is(CustomRoles.Madmate)))
         {
             opt.SetVision(false);
             opt.SetFloat(FloatOptionNames.CrewLightMod, GrenadierCauseVision.GetFloat());
@@ -100,7 +100,15 @@ internal class Grenadier : RoleBase
                 MadGrenadierBlinding.Remove(pc.PlayerId);
                 MadGrenadierBlinding.Add(pc.PlayerId, GetTimeStamp());
                 Main.AllPlayerControls.Where(x => x.IsModded())
-                    .Where(x => !x.GetCustomRole().IsImpostorTeam() && !x.Is(CustomRoles.Madmate))
+                    .Where(x => !x.GetCustomRole().IsImpostorTeamV3() && !x.Is(CustomRoles.Madmate))
+                    .Do(x => x.RPCPlayCustomSound("FlashBang"));
+            }
+            else if (pc.Is(CustomRoles.Rebel))
+            {
+                MadGrenadierBlinding.Remove(pc.PlayerId);
+                MadGrenadierBlinding.Add(pc.PlayerId, GetTimeStamp());
+                Main.AllPlayerControls.Where(x => x.IsModded())
+                    .Where(x => !x.GetCustomRole().IsImpostor() && !x.GetCustomRole().IsNeutral() && !x.Is(CustomRoles.Rebel))
                     .Do(x => x.RPCPlayCustomSound("FlashBang"));
             }
             else
@@ -108,7 +116,7 @@ internal class Grenadier : RoleBase
                 GrenadierBlinding.Remove(pc.PlayerId);
                 GrenadierBlinding.Add(pc.PlayerId, GetTimeStamp());
                 Main.AllPlayerControls.Where(x => x.IsModded())
-                    .Where(x => x.GetCustomRole().IsImpostor() || (x.GetCustomRole().IsNeutral() && GrenadierCanAffectNeutral.GetBool()))
+                    .Where(x => x.GetCustomRole().IsImpostor() || ((x.GetCustomRole().IsNeutral() || x.Is(CustomRoles.Rebel)) && GrenadierCanAffectNeutral.GetBool()))
                     .Do(x => x.RPCPlayCustomSound("FlashBang"));
             }
             if (!DisableShieldAnimations.GetBool()) pc.RpcGuardAndKill(pc);

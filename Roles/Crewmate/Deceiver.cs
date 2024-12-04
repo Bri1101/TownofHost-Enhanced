@@ -104,18 +104,18 @@ internal class Deceiver : RoleBase
         notActiveList.Clear();
         foreach (var pc in clientList)
         {
-            var target = Utils.GetPlayerById(pc);
+            var target = pc.GetPlayer();
             if (target == null || !target.IsAlive()) continue;
             var role = target.GetCustomRole();
             if (
                 (role.IsCrewmate() && !role.IsCrewKiller()) ||
-                (role.IsNeutral() && !role.IsNK())
+                (role.IsNeutral() && !target.HasKillButton())
                 )
             {
                 var killer = _Player;
                 if (killer == null) continue;
                 CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.Misfire, target.PlayerId);
-                target.SetRealKiller(Utils.GetPlayerById(pc));
+                target.SetRealKiller(pc.GetPlayer());
                 target.SetRealKiller(killer);
                 if (DeceiverAbilityLost.GetBool())
                 {

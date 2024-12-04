@@ -1,5 +1,5 @@
-﻿using static TOHE.Translator;
-using static TOHE.Options;
+﻿using static TOHE.Options;
+using static TOHE.Translator;
 
 namespace TOHE.Roles.Crewmate;
 
@@ -35,8 +35,8 @@ internal class Vigilante : RoleBase
     public override bool CanUseKillButton(PlayerControl pc) => true;
     public override bool OnCheckMurderAsKiller(PlayerControl killer, PlayerControl target)
     {
-        if (killer.Is(CustomRoles.Madmate)) return true;
-        if (target.GetCustomRole().IsCrewmate() && !target.Is(CustomRoles.Madmate) && !target.GetCustomRole().IsConverted())
+        if (killer.Is(CustomRoles.Madmate) || killer.GetCustomRole().IsConverted()) return true;
+        if (target.GetCustomRole().IsCrewmate() && !target.Is(CustomRoles.Madmate) && !target.Is(CustomRoles.Rebel) && !target.GetCustomRole().IsConverted())
         {
             killer.RpcSetCustomRole(CustomRoles.Madmate);
             killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Madmate), GetString("VigilanteNotify")));

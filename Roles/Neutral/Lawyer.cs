@@ -4,7 +4,6 @@ using TOHE.Roles.Core;
 using static TOHE.Options;
 using static TOHE.Translator;
 
-
 namespace TOHE.Roles.Neutral;
 
 internal class Lawyer : RoleBase
@@ -54,7 +53,7 @@ internal class Lawyer : RoleBase
 
     public override void SetupCustomOption()
     {
-        SetupRoleOptions(Id, TabGroup.NeutralRoles, CustomRoles.Lawyer);
+        SetupSingleRoleOptions(Id, TabGroup.NeutralRoles, CustomRoles.Lawyer);
         CanTargetImpostor = BooleanOptionItem.Create(Id + 10, "LawyerCanTargetImpostor", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lawyer]);
         CanTargetNeutralKiller = BooleanOptionItem.Create(Id + 11, "LawyerCanTargetNeutralKiller", false, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lawyer]);
         CanTargetNeutralApoc = BooleanOptionItem.Create(Id + 18, "LawyerCanTargetNeutralApocalypse", false, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lawyer]);
@@ -86,9 +85,9 @@ internal class Lawyer : RoleBase
                 else if (!CanTargetImpostor.GetBool() && target.Is(Custom_Team.Impostor)) continue;
                 else if (!CanTargetNeutralApoc.GetBool() && target.IsNeutralApocalypse()) continue;
                 else if (!CanTargetNeutralKiller.GetBool() && target.IsNeutralKiller()) continue;
-                else if (!CanTargetCrewmate.GetBool() && target.Is(Custom_Team.Crewmate)) continue;
+                else if (!CanTargetCrewmate.GetBool() && target.Is(Custom_Team.Crewmate) && !target.Is(CustomRoles.Rebel)) continue;
                 else if (!CanTargetJester.GetBool() && target.Is(CustomRoles.Jester)) continue;
-                else if (target.Is(Custom_Team.Neutral) && !target.IsNeutralKiller() && !target.Is(CustomRoles.Jester) && !target.IsNeutralApocalypse()) continue;
+                else if ((target.Is(Custom_Team.Neutral) || target.Is(CustomRoles.Rebel)) && !target.IsNeutralKiller() && !target.Is(CustomRoles.Jester) && !target.IsNeutralApocalypse()) continue;
                 if (target.GetCustomRole() is CustomRoles.GM or CustomRoles.SuperStar or CustomRoles.NiceMini or CustomRoles.EvilMini) continue;
                 if (lawyer.Is(CustomRoles.Lovers) && target.Is(CustomRoles.Lovers)) continue;
 
