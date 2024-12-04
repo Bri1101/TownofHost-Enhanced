@@ -276,13 +276,10 @@ class GameEndCheckerForNormal
                 {
                     if (!(!Main.LoversPlayers.ToArray().All(p => p.IsAlive()) && Options.LoverSuicide.GetBool()))
                     {
-                        if (WinnerTeam is CustomWinner.Crewmate or CustomWinner.Impostor or CustomWinner.Jackal or CustomWinner.Pelican)
-                        {
-                            ResetAndSetWinner(CustomWinner.Lovers);
-                            Main.AllPlayerControls
-                                .Where(p => p.Is(CustomRoles.Lovers))
-                                .Do(p => WinnerIds.Add(p.PlayerId));
-                        }
+                        ResetAndSetWinner(CustomWinner.Lovers);
+                        Main.AllPlayerControls
+                            .Where(p => p.Is(CustomRoles.Lovers))
+                            .Do(p => WinnerIds.Add(p.PlayerId));
                     }
                 }
 
@@ -398,28 +395,23 @@ class GameEndCheckerForNormal
                     }
                 }
 
-                if (Main.AllPlayerControls.All(p => p.GetCustomRole().IsCrewmate() && p.Is(CustomRoles.Rebel)) && WinnerTeam is not CustomWinner.Crewmate)
+                foreach (var pc in Main.AllAlivePlayerControls.Where(x => x.Is(CustomRoles.Rebel)).ToArray())
                 {
-                    foreach (var pc in Main.AllPlayerControls.Where(x => x.Is(CustomRoles.Rebel)))
+                    if (WinnerTeam == CustomWinner.Crewmate && WinnerIds.Contains(pc.PlayerId))
+                        WinnerIds.Remove(pc.PlayerId);
+                    else if (WinnerTeam != CustomWinner.Crewmate)
                     {
-                        if (WinnerIds.Any(x => Utils.GetPlayerById(x).Is(CustomRoles.Rebel)))
-                        {
-                            WinnerIds.Add(pc.PlayerId);
-                            AdditionalWinnerTeams.Add(AdditionalWinners.Rebel);
-                        }
+                        WinnerIds.Add(pc.PlayerId);
+                        AdditionalWinnerTeams.Add(AdditionalWinners.Rebel);
                     }
+
                 }
 
-                foreach (var pc in Main.AllPlayerControls)
+                if (AdditionalWinnerTeams.Contains(AdditionalWinners.Rebel) && WinnerTeam != CustomWinner.Crewmate)
                 {
-                    var winner = pc.GetCountTypes();
-                    var winnerRole = winner.GetNeutralCustomRoleFromCountType();
-                    if (WinnerTeam == CustomWinner.Impostor || WinnerRoles.Contains((CustomRoles)winnerRole.GetNeutralCustomWinnerFromRole()) || AdditionalWinnerTeams.Contains(AdditionalWinners.Rebel))
-                    {
-                        Main.AllPlayerControls
-                            .Where(p => p.Is(CustomRoles.Rebel) && !WinnerIds.Contains(p.PlayerId))
-                            .Do(p => WinnerIds.Add(p.PlayerId));
-                    }
+                    Main.AllPlayerControls
+                        .Where(p => p.Is(CustomRoles.Rebel) && !WinnerIds.Contains(p.PlayerId))
+                        .Do(p => WinnerIds.Add(p.PlayerId));
                 }
 
                 //Lovers follow winner

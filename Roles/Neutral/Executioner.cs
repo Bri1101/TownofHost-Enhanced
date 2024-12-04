@@ -163,6 +163,29 @@ internal class Executioner : RoleBase
         var valueChanger = ChangeRolesAfterTargetKilled.GetValue();
         var newCustomRole = CRoleChangeRoles[valueChanger];
 
+        switch (newCustomRole)
+        {
+            case CustomRoles.Celebrity:
+                Main.PlayerStates[executionerId].RemoveSubRole(CustomRoles.Cyber);
+                break;
+            case CustomRoles.Dictator:
+                new[] { CustomRoles.VoidBallot, CustomRoles.Knighted, CustomRoles.Tiebreaker, CustomRoles.Paranoia, CustomRoles.Silent, CustomRoles.Influenced }.Do(x => Main.PlayerStates[executionerId].RemoveSubRole(x));
+                break;
+            case CustomRoles.Mayor:
+                new[] { CustomRoles.VoidBallot, CustomRoles.Knighted, }.Do(x => Main.PlayerStates[executionerId].RemoveSubRole(x));
+                break;
+            case CustomRoles.Doctor:
+                new[] { CustomRoles.Autopsy, CustomRoles.Necroview }.Do(x => Main.PlayerStates[executionerId].RemoveSubRole(x));
+                break;
+            case CustomRoles.Jester:
+                if (Jester.CantMoveInVents.GetBool()) Main.PlayerStates[executionerId].RemoveSubRole(CustomRoles.Prohibited);
+                new[] { CustomRoles.Rebirth, CustomRoles.Susceptible }.Do(x => Main.PlayerStates[executionerId].RemoveSubRole(x));
+                break;
+            case CustomRoles.Opportunist when Opportunist.OppoImmuneToAttacksWhenTasksDone.GetBool():
+                Main.PlayerStates[executionerId].RemoveSubRole(CustomRoles.Fragile);
+                break;
+        }
+
         if (executioner.IsAlive())
             executioner.RpcChangeRoleBasis(newCustomRole);
 

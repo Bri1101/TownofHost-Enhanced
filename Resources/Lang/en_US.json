@@ -3608,6 +3608,7 @@
   "AdditionalWinnerRoleText.VengefulRomantic": "Vengeful Romantic",
   "AdditionalWinnerRoleText.SchrodingersCat": "Schrodingers Cat",
   "AdditionalWinnerRoleText.Troller": "Troller",
+  "AdditionalWinnerRoleText.Rebel": "Rebel",
   "ErrorEndText": "An error occurred",
   "ErrorEndTextDescription": "To avoid crashing, the game was forcibly ended.",
   "ForceEnd": "Aborted",

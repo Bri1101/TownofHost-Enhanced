@@ -302,20 +302,20 @@ class BeginCrewmatePatch
     {
         var role = PlayerControl.LocalPlayer.GetCustomRole();
 
-        if (role.IsMadmate() || PlayerControl.LocalPlayer.Is(CustomRoles.Madmate))
+        if (PlayerControl.LocalPlayer.Is(CustomRoles.Rebel))
+        {
+            teamToDisplay = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
+            teamToDisplay.Add(PlayerControl.LocalPlayer);
+            __instance.BeginCrewmate(teamToDisplay);
+            __instance.overlayHandle.color = new Color32(255, 171, 27, byte.MaxValue);
+            return false;
+        }
+        else if (role.IsMadmate() || PlayerControl.LocalPlayer.Is(CustomRoles.Madmate))
         {
             teamToDisplay = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
             teamToDisplay.Add(PlayerControl.LocalPlayer);
             __instance.BeginImpostor(teamToDisplay);
             __instance.overlayHandle.color = Palette.ImpostorRed;
-            return false;
-        }
-        if (PlayerControl.LocalPlayer.Is(CustomRoles.Rebel))
-        {
-            teamToDisplay = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
-            teamToDisplay.Add(PlayerControl.LocalPlayer);
-            __instance.BeginImpostor(teamToDisplay);
-            __instance.overlayHandle.color = new Color32(255, 26, 27, byte.MaxValue);
             return false;
         }
         else if (PlayerControl.LocalPlayer.IsNeutralApocalypse())
@@ -480,7 +480,7 @@ class BeginCrewmatePatch
         if (PlayerControl.LocalPlayer.Is(CustomRoles.Rebel))
         {
             __instance.TeamTitle.text = GetString("TeamRebel");
-            __instance.TeamTitle.color = __instance.BackgroundBar.material.color = new Color32(255, 26, 27, byte.MaxValue);
+            __instance.TeamTitle.color = __instance.BackgroundBar.material.color = new Color32(255, 171, 27, byte.MaxValue);
             PlayerControl.LocalPlayer.Data.Role.IntroSound = GetIntroSound(RoleTypes.Shapeshifter);
             __instance.ImpostorText.gameObject.SetActive(true);
             __instance.ImpostorText.text = GetString("SubText.Rebel");
@@ -554,7 +554,7 @@ class BeginImpostorPatch
         {
             yourTeam = new();
             yourTeam.Add(PlayerControl.LocalPlayer);
-            __instance.overlayHandle.color = new Color32(255, 26, 27, byte.MaxValue);
+            __instance.overlayHandle.color = new Color32(255, 171, 27, byte.MaxValue);
             return true;
         }
 

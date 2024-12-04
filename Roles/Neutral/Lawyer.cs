@@ -1,5 +1,6 @@
 using Hazel;
 using InnerNet;
+using TOHE.Roles.AddOns.Common;
 using TOHE.Roles.Core;
 using static TOHE.Options;
 using static TOHE.Translator;
@@ -193,6 +194,29 @@ internal class Lawyer : RoleBase
         var lawyer = _Player;
         var valueChanger = ChangeRolesAfterTargetKilled.GetValue();
         var newCustomRole = CRoleChangeRoles[valueChanger];
+
+        switch (newCustomRole)
+        {
+            case CustomRoles.Jester:
+                if (Jester.CantMoveInVents.GetBool()) Main.PlayerStates[lawyer.PlayerId].RemoveSubRole(CustomRoles.Prohibited);
+                new[] { CustomRoles.Rebirth, CustomRoles.Susceptible }.Do(x => Main.PlayerStates[lawyer.PlayerId].RemoveSubRole(x));
+                break;
+            case CustomRoles.Opportunist when Opportunist.OppoImmuneToAttacksWhenTasksDone.GetBool():
+                Main.PlayerStates[lawyer.PlayerId].RemoveSubRole(CustomRoles.Fragile);
+                break;
+            case CustomRoles.Celebrity:
+                Main.PlayerStates[lawyer.PlayerId].RemoveSubRole(CustomRoles.Cyber);
+                break;
+            case CustomRoles.Dictator:
+                new[] { CustomRoles.VoidBallot, CustomRoles.Knighted, CustomRoles.Tiebreaker, CustomRoles.Paranoia, CustomRoles.Silent, CustomRoles.Influenced }.Do(x => Main.PlayerStates[lawyer.PlayerId].RemoveSubRole(x));
+                break;
+            case CustomRoles.Mayor:
+                new[] { CustomRoles.VoidBallot, CustomRoles.Knighted, }.Do(x => Main.PlayerStates[lawyer.PlayerId].RemoveSubRole(x));
+                break;
+            case CustomRoles.Doctor:
+                new[] { CustomRoles.Autopsy, CustomRoles.Necroview }.Do(x => Main.PlayerStates[lawyer.PlayerId].RemoveSubRole(x));
+                break;
+        }
 
         if (lawyer.IsAlive())
             lawyer.RpcChangeRoleBasis(newCustomRole);
