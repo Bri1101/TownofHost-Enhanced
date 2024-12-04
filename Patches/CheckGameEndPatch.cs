@@ -395,7 +395,7 @@ class GameEndCheckerForNormal
                     }
                 }
 
-                foreach (var pc in Main.AllAlivePlayerControls.Where(x => x.Is(CustomRoles.Rebel)).ToArray())
+                foreach (var pc in Main.AllPlayerControls.Where(x => x.Is(CustomRoles.Rebel)).ToArray())
                 {
                     if (WinnerTeam == CustomWinner.Crewmate && WinnerIds.Contains(pc.PlayerId))
                         WinnerIds.Remove(pc.PlayerId);
