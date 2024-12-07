@@ -160,7 +160,10 @@ internal class Shroud : RoleBase
             if (!shrouded.IsAlive()) continue;
 
             shrouded.SetDeathReason(PlayerState.DeathReason.Shrouded);
-            shrouded.RpcMurderPlayer(shrouded);
+            shrouded.RpcExileV2();
+            shrouded.Data.IsDead = true;
+            shrouded.Data.MarkDirty();
+            Main.PlayerStates[shrouded.PlayerId].SetDead();
             shrouded.SetRealKiller(_Player);
 
             SendRPC(byte.MaxValue, shrouded.PlayerId, 2);

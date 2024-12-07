@@ -770,20 +770,6 @@ public static class CustomRolesHelper
                     return false;
                 break;
 
-            case CustomRoles.Egoist:
-                if (pc.Is(CustomRoles.Rebel)
-                    || pc.Is(CustomRoles.Madmate)
-                    || pc.Is(CustomRoles.Hurried)
-                    || pc.Is(CustomRoles.Gangster)
-                    || pc.Is(CustomRoles.Admirer)
-                    || pc.Is(CustomRoles.GuardianAngelTOHE))
-                    return false;
-                if (pc.GetCustomRole().IsNeutral() || pc.GetCustomRole().IsMadmate() || pc.IsAnySubRole(sub => sub.IsConverted()))
-                    return false;
-                if ((pc.GetCustomRole().IsImpostor() && !Egoist.ImpCanBeEgoist.GetBool()) || (pc.GetCustomRole().IsCrewmate() && !Egoist.CrewCanBeEgoist.GetBool()))
-                    return false;
-                break;
-
             case CustomRoles.Rebel:
                 if (pc.Is(CustomRoles.Egoist)
                     || pc.Is(CustomRoles.Madmate)
@@ -798,6 +784,20 @@ public static class CustomRolesHelper
                     || pc.Is(CustomRoles.GuardianAngelTOHE))
                     return false;
                 if (pc.GetCustomRole().IsImpostor() || pc.GetCustomRole().IsNeutral() || pc.GetCustomRole().IsMadmate() || pc.IsAnySubRole(sub => sub.IsConverted()))
+                    return false;
+                break;
+
+            case CustomRoles.Egoist:
+                if (pc.Is(CustomRoles.Rebel)
+                    || pc.Is(CustomRoles.Madmate)
+                    || pc.Is(CustomRoles.Hurried)
+                    || pc.Is(CustomRoles.Gangster)
+                    || pc.Is(CustomRoles.Admirer)
+                    || pc.Is(CustomRoles.GuardianAngelTOHE))
+                    return false;
+                if (pc.GetCustomRole().IsNeutral() || pc.GetCustomRole().IsMadmate() || pc.IsAnySubRole(sub => sub.IsConverted()))
+                    return false;
+                if ((pc.GetCustomRole().IsImpostor() && !Egoist.ImpCanBeEgoist.GetBool()) || (pc.GetCustomRole().IsCrewmate() && !Egoist.CrewCanBeEgoist.GetBool()))
                     return false;
                 break;
 

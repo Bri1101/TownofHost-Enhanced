@@ -4,7 +4,7 @@ namespace TOHE.Roles.AddOns.Crewmate;
 
 public class Rebel : IAddon
 {
-    private const int Id = 31200;
+    private const int Id = 31400;
     public AddonTypes Type => AddonTypes.Misc;
 
     public void SetupCustomOption()

@@ -404,7 +404,6 @@ class GameEndCheckerForNormal
                         WinnerIds.Add(pc.PlayerId);
                         AdditionalWinnerTeams.Add(AdditionalWinners.Rebel);
                     }
-
                 }
 
                 if (AdditionalWinnerTeams.Contains(AdditionalWinners.Rebel) && WinnerTeam != CustomWinner.Crewmate)
