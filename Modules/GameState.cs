@@ -143,6 +143,7 @@ public class PlayerState(byte playerId)
             SubRoles.Remove(CustomRoles.Rascal);
             SubRoles.Remove(CustomRoles.Loyal);
             SubRoles.Remove(CustomRoles.Admired);
+            SubRoles.Remove(CustomRoles.Rebel);
         }
 
         switch (role)
