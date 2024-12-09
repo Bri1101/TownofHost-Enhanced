@@ -1154,7 +1154,8 @@ static class ExtendedPlayerControl
             || sheriff.Is(CustomRoles.Charmed)
             || sheriff.Is(CustomRoles.Infected)
             || sheriff.Is(CustomRoles.Contagious)
-            || sheriff.Is(CustomRoles.Egoist);
+            || sheriff.Is(CustomRoles.Egoist)
+            || sheriff.Is(CustomRoles.Rebel);
     }
     public static bool ShouldBeDisplayed(this CustomRoles subRole)
     {
@@ -1167,7 +1168,8 @@ static class ExtendedPlayerControl
             CustomRoles.Soulless and not
             CustomRoles.Lovers and not
             CustomRoles.Infected and not
-            CustomRoles.Contagious;
+            CustomRoles.Contagious and not
+            CustomRoles.Rebel;
     }
 
     public static void AddInSwitchAddons(this PlayerControl Killed, PlayerControl target, CustomRoles Addon = CustomRoles.NotAssigned, CustomRoles? IsAddon = CustomRoles.NotAssigned)
@@ -1250,11 +1252,11 @@ static class ExtendedPlayerControl
         && target.Data.IsDead || target.Is(CustomRoles.Gravestone) && target.Data.IsDead;
 
     public static bool KnowDeadTeam(this PlayerControl seer, PlayerControl target)
-        => (seer.Is(CustomRoles.Necroview))
+        => seer.Is(CustomRoles.Necroview)
         && target.Data.IsDead;
 
     public static bool KnowLivingTeam(this PlayerControl seer, PlayerControl target)
-        => (seer.Is(CustomRoles.Visionary))
+        => seer.Is(CustomRoles.Visionary)
         && !target.Data.IsDead;
 
     private readonly static LogHandler logger = Logger.Handler("KnowRoleTarget");
@@ -1304,7 +1306,8 @@ static class ExtendedPlayerControl
                 or CustomRoles.Charmed
                 or CustomRoles.Infected
                 or CustomRoles.Contagious
-                or CustomRoles.Egoist) 
+                or CustomRoles.Egoist
+                or CustomRoles.Rebel) 
             && KnowSubRoleTarget(seer, target))
             return true;
 

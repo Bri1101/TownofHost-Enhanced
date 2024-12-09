@@ -43,7 +43,7 @@ internal class Instigator : RoleBase
 
     public override void OnPlayerExiled(PlayerControl instigator, NetworkedPlayerInfo exiled)
     {
-        if (exiled == null || !exiled.GetCustomRole().IsCrewmate()) return;
+        if (exiled == null || !exiled.GetCustomRole().IsCrewmate() || exiled.GetCustomRole() == CustomRoles.Rebel) return;
 
         if (AbilityLimit <= 0) return;
 
@@ -55,7 +55,7 @@ internal class Instigator : RoleBase
         foreach (var playerVote in votedForExiled)
         {
             var crewPlayer = Main.AllPlayerControls.FirstOrDefault(a => a.PlayerId == playerVote.TargetPlayerId);
-            if (crewPlayer == null || !crewPlayer.GetCustomRole().IsCrewmate()) return;
+            if (crewPlayer == null || !crewPlayer.GetCustomRole().IsCrewmate() || crewPlayer.Is(CustomRoles.Rebel)) return;
             killPotentials.Add(crewPlayer);
         }
 

@@ -556,6 +556,7 @@ public static class Utils
                             case CustomRoles.Infected:
                             case CustomRoles.Contagious:
                             case CustomRoles.Admired:
+                            case CustomRoles.Rebel:
                                 RoleColor = GetRoleColor(subRole);
                                 RoleText = GetRoleString($"{subRole}-") + RoleText;
                                 break;
@@ -650,6 +651,7 @@ public static class Utils
                 case CustomRoles.Contagious:
                 case CustomRoles.Soulless:
                 case CustomRoles.Rascal:
+                case CustomRoles.Rebel:
                     hasTasks &= !ForRecompute;
                     break;
                 case CustomRoles.Mundane:
@@ -1014,7 +1016,7 @@ public static class Utils
         {
             if (role is CustomRoles.NotAssigned or
                         CustomRoles.LastImpostor) continue;
-            if (summary && role is CustomRoles.Madmate or CustomRoles.Charmed or CustomRoles.Recruit or CustomRoles.Admired or CustomRoles.Infected or CustomRoles.Contagious or CustomRoles.Soulless) continue;
+            if (summary && role is CustomRoles.Madmate or CustomRoles.Charmed or CustomRoles.Recruit or CustomRoles.Admired or CustomRoles.Infected or CustomRoles.Contagious or CustomRoles.Soulless or CustomRoles.Rebel) continue;
 
             var RoleColor = GetRoleColor(role);
             var RoleText = disableColor ? GetRoleName(role) : ColorString(RoleColor, GetRoleName(role));

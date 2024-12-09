@@ -10,6 +10,7 @@ using TOHE.Roles.Core;
 using TOHE.Roles.Core.AssignManager;
 using TOHE.Roles.Neutral;
 using UnityEngine;
+using static Il2CppSystem.Linq.Expressions.Interpreter.NullableMethodCallInstruction;
 using static TOHE.Translator;
 
 namespace TOHE;
@@ -302,7 +303,15 @@ class BeginCrewmatePatch
     {
         var role = PlayerControl.LocalPlayer.GetCustomRole();
 
-        if (role.IsMadmate() || PlayerControl.LocalPlayer.Is(CustomRoles.Madmate))
+        if (PlayerControl.LocalPlayer.Is(CustomRoles.Rebel))
+        {
+            teamToDisplay = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
+            teamToDisplay.Add(PlayerControl.LocalPlayer);
+
+            __instance.overlayHandle.color = new Color32(255, 171, 26, byte.MaxValue);
+            return true;
+        }
+        else if (role.IsMadmate() || PlayerControl.LocalPlayer.Is(CustomRoles.Madmate))
         {
             teamToDisplay = new Il2CppSystem.Collections.Generic.List<PlayerControl>();
             teamToDisplay.Add(PlayerControl.LocalPlayer);
@@ -461,7 +470,15 @@ class BeginCrewmatePatch
                 break;
         }
 
-        if (PlayerControl.LocalPlayer.Is(CustomRoles.Madmate) || role.IsMadmate())
+        if (PlayerControl.LocalPlayer.Is(CustomRoles.Rebel))
+        {
+            __instance.TeamTitle.text = GetString("TeamRebel");
+            __instance.TeamTitle.color = __instance.BackgroundBar.material.color = new Color32(255, 171, 26, byte.MaxValue);
+            PlayerControl.LocalPlayer.Data.Role.IntroSound = GetIntroSound(RoleTypes.Shapeshifter);
+            __instance.ImpostorText.gameObject.SetActive(true);
+            __instance.ImpostorText.text = GetString("SubText.Rebel");
+        }
+        else if (PlayerControl.LocalPlayer.Is(CustomRoles.Madmate) || role.IsMadmate())
         {
             __instance.TeamTitle.text = GetString("TeamMadmate");
             __instance.TeamTitle.color = __instance.BackgroundBar.material.color = new Color32(255, 25, 25, byte.MaxValue);

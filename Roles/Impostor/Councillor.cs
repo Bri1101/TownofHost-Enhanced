@@ -6,6 +6,7 @@ using TOHE.Roles.Core;
 using TOHE.Roles.Crewmate;
 using TOHE.Roles.Double;
 using UnityEngine;
+using static TOHE.Options;
 using static TOHE.Translator;
 
 namespace TOHE.Roles.Impostor;
@@ -34,19 +35,19 @@ internal class Councillor : RoleBase
 
     public override void SetupCustomOption()
     {
-        Options.SetupRoleOptions(Id, TabGroup.ImpostorRoles, CustomRoles.Councillor);
-            KillCooldown = FloatOptionItem.Create(Id + 10, GeneralOption.KillCooldown, new(0f, 180f, 2.5f), 30f, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor])
+        SetupRoleOptions(Id, TabGroup.ImpostorRoles, CustomRoles.Councillor);
+            KillCooldown = FloatOptionItem.Create(Id + 10, GeneralOption.KillCooldown, new(0f, 180f, 2.5f), 30f, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor])
                 .SetValueFormat(OptionFormat.Seconds);
-        MurderLimitPerMeeting = IntegerOptionItem.Create(Id + 11, "CouncillorMurderLimitPerMeeting", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor])
+        MurderLimitPerMeeting = IntegerOptionItem.Create(Id + 11, "CouncillorMurderLimitPerMeeting", new(1, 15, 1), 1, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor])
             .SetValueFormat(OptionFormat.Times);
-        MurderLimitPerGame = IntegerOptionItem.Create(Id + 12, "CouncillorMurderLimitPerGame", new(1, 15, 1), 4, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor])
+        MurderLimitPerGame = IntegerOptionItem.Create(Id + 12, "CouncillorMurderLimitPerGame", new(1, 15, 1), 4, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor])
             .SetValueFormat(OptionFormat.Times);
-        MakeEvilJudgeClear = BooleanOptionItem.Create(Id + 18, "CouncillorMakeEvilJudgeClear", true, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor]);
-        CanMurderMadmate = BooleanOptionItem.Create(Id + 13, "CouncillorCanMurderMadmate", true, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor]);
-        CanMurderImpostor = BooleanOptionItem.Create(Id + 14, "CouncillorCanMurderImpostor", true, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor]);
-        CanMurderTaskDoneSnitch = BooleanOptionItem.Create(Id + 16, "CouncillorCanMurderTaskDoneSnitch", true, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor]);
-        SuicideOnJudgeImpTeam = BooleanOptionItem.Create(Id + 17, "CouncillorSuicideOnJudgeImpTeam", true, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor]);
-        TryHideMsg = BooleanOptionItem.Create(Id + 15, "CouncillorTryHideMsg", true, TabGroup.ImpostorRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Councillor])
+        MakeEvilJudgeClear = BooleanOptionItem.Create(Id + 18, "CouncillorMakeEvilJudgeClear", true, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor]);
+        CanMurderMadmate = BooleanOptionItem.Create(Id + 13, "CouncillorCanMurderMadmate", true, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor]);
+        CanMurderImpostor = BooleanOptionItem.Create(Id + 14, "CouncillorCanMurderImpostor", true, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor]);
+        CanMurderTaskDoneSnitch = BooleanOptionItem.Create(Id + 16, "CouncillorCanMurderTaskDoneSnitch", true, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor]);
+        SuicideOnJudgeImpTeam = BooleanOptionItem.Create(Id + 17, "CouncillorSuicideOnJudgeImpTeam", true, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor]);
+        TryHideMsg = BooleanOptionItem.Create(Id + 15, "CouncillorTryHideMsg", true, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Councillor])
             .SetColor(Color.green);
     }
     public override void Add(byte playerId)
@@ -118,7 +119,7 @@ internal class Councillor : RoleBase
                 else if (AbilityLimit <= 0)
                 {
                     pc.ShowInfoMessage(isUI, GetString("CouncillorMurderMaxGame"));
-                    return true; 
+                    return true;
                 }
 
                 if (Jailer.IsTarget(target.PlayerId))
@@ -182,8 +183,7 @@ internal class Councillor : RoleBase
                     pc.ShowInfoMessage(isUI, GetString("EGGuessSnitchTaskDone"));
                     return true;
                 }
-                else if ((target.Is(CustomRoles.Madmate) ||
-                        target.Is(CustomRoles.Refugee) || target.Is(CustomRoles.Parasite) || target.Is(CustomRoles.Crewpostor)))
+                else if (target.Is(CustomRoles.Madmate) || target.GetCustomRole().IsMadmate())
                 {
                     if (pc.Is(CustomRoles.Admired) || (pc.IsAnySubRole(x => x.IsConverted()) && !pc.Is(CustomRoles.Madmate)))
                     {
@@ -204,7 +204,7 @@ internal class Councillor : RoleBase
                         CouncillorSuicide = true;
                     }
                 }
-                else if ((target.GetCustomRole().IsImpostor()))
+                else if (target.GetCustomRole().IsImpostor())
                 {
                     if (pc.Is(CustomRoles.Admired) || (pc.IsAnySubRole(x => x.IsConverted()) && !pc.Is(CustomRoles.Madmate)))
                     {
@@ -225,8 +225,8 @@ internal class Councillor : RoleBase
                         CouncillorSuicide = true;
                     }
                 }
-                else if (target.GetCustomRole().IsCrewmate()) CouncillorSuicide = false;
-                else if (target.GetCustomRole().IsNeutral()) CouncillorSuicide = false;
+                else if (target.GetCustomRole().IsCrewmate() && !target.Is(CustomRoles.Rebel)) CouncillorSuicide = false;
+                else if (target.GetCustomRole().IsNeutral() || target.Is(CustomRoles.Rebel)) CouncillorSuicide = false;
                 else
                 {
                     Logger.Warn("Impossibe to reach here!", "CouncillorTrial");

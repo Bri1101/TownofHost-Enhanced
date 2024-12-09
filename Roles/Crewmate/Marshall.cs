@@ -33,11 +33,11 @@ internal class Marshall : RoleBase
     }
     private static bool GetExpose(PlayerControl pc)
     {
-        if (!pc.IsAlive() || pc.Is(CustomRoles.Madmate)) return false;
+        if (!pc.IsAlive() || pc.Is(CustomRoles.Madmate) || pc.Is(CustomRoles.Rebel)) return false;
 
         return pc.Is(CustomRoles.Marshall) && pc.GetPlayerTaskState().IsTaskFinished;
     }
-    private static bool IsMarshallTarget(PlayerControl seer) => CustomRoles.Marshall.HasEnabled() && seer.Is(Custom_Team.Crewmate);
+    private static bool IsMarshallTarget(PlayerControl seer) => CustomRoles.Marshall.HasEnabled() && seer.Is(Custom_Team.Crewmate) && !seer.Is(CustomRoles.Rebel);
     public override string GetMark(PlayerControl seer, PlayerControl target = null, bool isForMeeting = false)
     {
         target ??= seer;
@@ -45,7 +45,7 @@ internal class Marshall : RoleBase
         return IsMarshallTarget(seer) && GetExpose(target) ? Utils.ColorString(RoleColor, "★") : string.Empty;
     }
 
-    private static bool VisibleToCrewmate(PlayerControl seer, PlayerControl target) => target.GetPlayerTaskState().IsTaskFinished && target.Is(CustomRoles.Marshall) && seer.Is(Custom_Team.Crewmate);
+    private static bool VisibleToCrewmate(PlayerControl seer, PlayerControl target) => target.GetPlayerTaskState().IsTaskFinished && target.Is(CustomRoles.Marshall) && seer.Is(Custom_Team.Crewmate) && !seer.Is(CustomRoles.Rebel);
     public override bool KnowRoleTarget(PlayerControl seer, PlayerControl target) => VisibleToCrewmate(seer, target);
     public override bool OthersKnowTargetRoleColor(PlayerControl seer, PlayerControl target) => VisibleToCrewmate(seer, target);
     

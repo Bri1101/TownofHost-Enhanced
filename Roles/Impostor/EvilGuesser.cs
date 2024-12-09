@@ -1,4 +1,6 @@
 ﻿using UnityEngine;
+using static TOHE.Options;
+using static TOHE.Translator;
 
 namespace TOHE.Roles.Impostor;
 
@@ -17,23 +19,23 @@ internal class EvilGuesser : RoleBase
     private static OptionItem EGCanGuessTime;
     private static OptionItem EGCanGuessImp;
     private static OptionItem EGCanGuessAdt;
-    //private static OptionItem EGCanGuessTaskDoneSnitch; Not used
+    private static OptionItem EGCanGuessTaskDoneSnitch;
     private static OptionItem EGTryHideMsg;
 
     public override void SetupCustomOption()
     {
-        Options.SetupRoleOptions(Id, TabGroup.ImpostorRoles, CustomRoles.EvilGuesser);
+        SetupRoleOptions(Id, TabGroup.ImpostorRoles, CustomRoles.EvilGuesser);
         EGCanGuessTime = IntegerOptionItem.Create(Id + 2, "GuesserCanGuessTimes", new(1, 15, 1), 15, TabGroup.ImpostorRoles, false)
-            .SetParent(Options.CustomRoleSpawnChances[CustomRoles.EvilGuesser])
+            .SetParent(CustomRoleSpawnChances[CustomRoles.EvilGuesser])
             .SetValueFormat(OptionFormat.Times);
         EGCanGuessImp = BooleanOptionItem.Create(Id + 3, "EGCanGuessImp", true, TabGroup.ImpostorRoles, false)
-            .SetParent(Options.CustomRoleSpawnChances[CustomRoles.EvilGuesser]);
+            .SetParent(CustomRoleSpawnChances[CustomRoles.EvilGuesser]);
         EGCanGuessAdt = BooleanOptionItem.Create(Id + 4, "EGCanGuessAdt", false, TabGroup.ImpostorRoles, false)
-            .SetParent(Options.CustomRoleSpawnChances[CustomRoles.EvilGuesser]);
-        //EGCanGuessTaskDoneSnitch = BooleanOptionItem.Create(Id + 5, "EGCanGuessTaskDoneSnitch", true, TabGroup.ImpostorRoles, false)
-        //    .SetParent(Options.CustomRoleSpawnChances[CustomRoles.EvilGuesser]);
+            .SetParent(CustomRoleSpawnChances[CustomRoles.EvilGuesser]);
+        EGCanGuessTaskDoneSnitch = BooleanOptionItem.Create(Id + 5, "EGCanGuessTaskDoneSnitch", true, TabGroup.ImpostorRoles, false)
+            .SetParent(CustomRoleSpawnChances[CustomRoles.EvilGuesser]);
         EGTryHideMsg = BooleanOptionItem.Create(Id + 6, "GuesserTryHideMsg", true, TabGroup.ImpostorRoles, false)
-            .SetParent(Options.CustomRoleSpawnChances[CustomRoles.EvilGuesser])
+            .SetParent(CustomRoleSpawnChances[CustomRoles.EvilGuesser])
             .SetColor(Color.green);
     }
     public override void Init()
@@ -63,21 +65,28 @@ internal class EvilGuesser : RoleBase
         // Check limit
         if (GuessManager.GuesserGuessed[guesser.PlayerId] >= EGCanGuessTime.GetInt())
         {
-            guesser.ShowInfoMessage(isUI, Translator.GetString("EGGuessMax"));
+            guesser.ShowInfoMessage(isUI, GetString("EGGuessMax"));
             return true;
         }
 
         // Evil Guesser Can't Guess Addons
         if (role.IsAdditionRole() && !EGCanGuessAdt.GetBool())
         {
-            guesser.ShowInfoMessage(isUI, Translator.GetString("GuessAdtRole"));
+            guesser.ShowInfoMessage(isUI, GetString("GuessAdtRole"));
+            return true;
+        }
+
+        // Evil Guesser Can't Guess Snitch with Completed Tasks
+        if (target.Is(CustomRoles.Snitch) && target.AllTasksCompleted() && !EGCanGuessTaskDoneSnitch.GetBool())
+        {
+            guesser.ShowInfoMessage(isUI, GetString("EGGuessSnitchTaskDone"));
             return true;
         }
 
         // Evil Guesser Can't Guess Impostors
         if (role.IsImpostor() && !EGCanGuessImp.GetBool())
         {
-            guesser.ShowInfoMessage(isUI, Translator.GetString("GuessImpRole"));
+            guesser.ShowInfoMessage(isUI, GetString("GuessImpRole"));
             return true;
         }
 

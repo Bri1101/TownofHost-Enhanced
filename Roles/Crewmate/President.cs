@@ -1,5 +1,6 @@
 ﻿using Hazel;
 using TOHE.Modules.ChatManager;
+using TOHE.Roles.AddOns.Crewmate;
 using UnityEngine;
 using static TOHE.Translator;
 
@@ -162,7 +163,7 @@ internal class President : RoleBase
             foreach (var tar in Main.AllAlivePlayerControls)
             {
                 if (!MadmatesSeePresident.GetBool() && tar.Is(CustomRoles.Madmate) && tar != pc) continue;
-                if (!NeutralsSeePresident.GetBool() && tar.GetCustomRole().IsNeutral()) continue;
+                if (!NeutralsSeePresident.GetBool() && (tar.GetCustomRole().IsNeutral() || tar.Is(CustomRoles.Rebel))) continue;
                 if (!ImpsSeePresident.GetBool() && (tar.GetCustomRole().IsImpostor() || tar.Is(CustomRoles.Crewpostor))) continue;
                 Utils.SendMessage(string.Format(GetString("PresidentRevealed"), pc.GetRealName()), tar.PlayerId, Utils.ColorString(Utils.GetRoleColor(CustomRoles.President), GetString("PresidentRevealTitle")));
             }
@@ -234,9 +235,9 @@ internal class President : RoleBase
         return false;
     }
     public override bool KnowRoleTarget(PlayerControl seer, PlayerControl target)
-        => (target.Is(CustomRoles.President) && seer.GetCustomRole().IsCrewmate() && !seer.Is(CustomRoles.Madmate) && CheckPresidentReveal[target.PlayerId] == true) ||
+        => (target.Is(CustomRoles.President) && seer.GetCustomRole().IsCrewmate() && !seer.Is(CustomRoles.Rebel) && !seer.Is(CustomRoles.Madmate) && CheckPresidentReveal[target.PlayerId] == true) ||
             (target.Is(CustomRoles.President) && seer.Is(CustomRoles.Madmate) && MadmatesSeePresident.GetBool() && CheckPresidentReveal[target.PlayerId] == true) ||
-            (target.Is(CustomRoles.President) && seer.GetCustomRole().IsNeutral() && NeutralsSeePresident.GetBool() && CheckPresidentReveal[target.PlayerId] == true) ||
+            (target.Is(CustomRoles.President) && (seer.GetCustomRole().IsNeutral() || seer.Is(CustomRoles.Rebel)) && NeutralsSeePresident.GetBool() && CheckPresidentReveal[target.PlayerId] == true) ||
             (target.Is(CustomRoles.President) && seer.GetCustomRole().IsImpostor() && ImpsSeePresident.GetBool() && CheckPresidentReveal[target.PlayerId] == true);
     
     public override bool OthersKnowTargetRoleColor(PlayerControl seer, PlayerControl target) => KnowRoleTarget(seer, target);

@@ -238,6 +238,7 @@ public static class Options
     // Confirm Ejection
     public static OptionItem CEMode;
     public static OptionItem ShowImpRemainOnEject;
+    public static OptionItem ShowMadmateRemainOnEject;
     public static OptionItem ShowNKRemainOnEject;
     public static OptionItem ShowNARemainOnEject;
     public static OptionItem ShowTeamNextToRoleNameOnEject;
@@ -633,7 +634,7 @@ public static class Options
     private static System.Collections.IEnumerator CoLoadOptions()
     {
         //#######################################
-        // 30100 last id for roles/add-ons (Next use 30200)
+        // 31400 last id for roles/add-ons (Next use 31500)
         // Limit id for roles/add-ons --- "59999"
         //#######################################
 
@@ -1175,6 +1176,10 @@ public static class Options
             .SetHeader(true)
             .SetColor(new Color32(255, 238, 232, byte.MaxValue));
         ShowImpRemainOnEject = BooleanOptionItem.Create(60441, "ShowImpRemainOnEject", true, TabGroup.ModSettings, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetColor(new Color32(255, 238, 232, byte.MaxValue));
+        ShowMadmateRemainOnEject = BooleanOptionItem.Create(60448, "ShowMadmateRemainOnEject", true, TabGroup.ModSettings, false)
+            .SetParent(ShowImpRemainOnEject)
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(255, 238, 232, byte.MaxValue));
         ShowNKRemainOnEject = BooleanOptionItem.Create(60442, "ShowNKRemainOnEject", true, TabGroup.ModSettings, false)

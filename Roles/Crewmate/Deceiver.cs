@@ -2,6 +2,7 @@
 using TOHE.Modules;
 using TOHE.Roles.Core;
 using UnityEngine;
+using static TOHE.Options;
 using static TOHE.Translator;
 
 namespace TOHE.Roles.Crewmate;
@@ -25,12 +26,12 @@ internal class Deceiver : RoleBase
 
     public override void SetupCustomOption()
     {
-        Options.SetupRoleOptions(Id, TabGroup.CrewmateRoles, CustomRoles.Deceiver);
-        DeceiverSkillCooldown = FloatOptionItem.Create(Id + 10, GeneralOption.AbilityCooldown, new(2.5f, 180f, 2.5f), 20f, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Deceiver])
+        SetupRoleOptions(Id, TabGroup.CrewmateRoles, CustomRoles.Deceiver);
+        DeceiverSkillCooldown = FloatOptionItem.Create(Id + 10, GeneralOption.AbilityCooldown, new(2.5f, 180f, 2.5f), 20f, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Deceiver])
             .SetValueFormat(OptionFormat.Seconds);
-        DeceiverSkillLimitTimes = IntegerOptionItem.Create(Id + 11, GeneralOption.SkillLimitTimes, new(1, 15, 1), 2, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Deceiver])
+        DeceiverSkillLimitTimes = IntegerOptionItem.Create(Id + 11, GeneralOption.SkillLimitTimes, new(1, 15, 1), 2, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Deceiver])
             .SetValueFormat(OptionFormat.Times);
-        DeceiverAbilityLost = BooleanOptionItem.Create(Id + 12, "DeceiverAbilityLost", true, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Deceiver]);
+        DeceiverAbilityLost = BooleanOptionItem.Create(Id + 12, "DeceiverAbilityLost", true, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Deceiver]);
     }
     public override void Add(byte playerId)
     {
@@ -107,10 +108,7 @@ internal class Deceiver : RoleBase
             var target = Utils.GetPlayerById(pc);
             if (target == null || !target.IsAlive()) continue;
             var role = target.GetCustomRole();
-            if (
-                (role.IsCrewmate() && !role.IsCrewKiller()) ||
-                (role.IsNeutral() && !role.IsNK())
-                )
+            if ((role.IsCrewmate() || role.IsNeutral()) && !target.HasKillButton())
             {
                 var killer = _Player;
                 if (killer == null) continue;

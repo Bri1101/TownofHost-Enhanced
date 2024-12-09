@@ -1,12 +1,12 @@
 ﻿using AmongUs.GameOptions;
 using System;
 using System.Text;
-using UnityEngine;
 using TOHE.Modules;
-using static TOHE.Utils;
+using TOHE.Roles.Core;
+using UnityEngine;
 using static TOHE.Options;
 using static TOHE.Translator;
-using TOHE.Roles.Core;
+using static TOHE.Utils;
 
 namespace TOHE.Roles.Crewmate;
 
@@ -53,7 +53,6 @@ internal class Grenadier : RoleBase
     public override void Add(byte playerId)
     {
         AbilityLimit = GrenadierSkillMaxOfUseage.GetFloat();
-        //CustomRoleManager.OnFixedUpdateLowLoadOthers.Add(OnGrenaderFixOthers);
     }
 
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
@@ -68,7 +67,7 @@ internal class Grenadier : RoleBase
             (player.GetCustomRole().IsImpostor() ||
             (player.GetCustomRole().IsNeutral() && GrenadierCanAffectNeutral.GetBool()))
             )
-            || (MadGrenadierBlinding.Any() && !player.GetCustomRole().IsImpostorTeam() && !player.Is(CustomRoles.Madmate)))
+            || (MadGrenadierBlinding.Any() && !player.GetCustomRole().IsImpostorTeamV3() && !player.Is(CustomRoles.Madmate)))
         {
             opt.SetVision(false);
             opt.SetFloat(FloatOptionNames.CrewLightMod, GrenadierCauseVision.GetFloat());
@@ -100,7 +99,15 @@ internal class Grenadier : RoleBase
                 MadGrenadierBlinding.Remove(pc.PlayerId);
                 MadGrenadierBlinding.Add(pc.PlayerId, GetTimeStamp());
                 Main.AllPlayerControls.Where(x => x.IsModded())
-                    .Where(x => !x.GetCustomRole().IsImpostorTeam() && !x.Is(CustomRoles.Madmate))
+                    .Where(x => !x.GetCustomRole().IsImpostorTeamV3() && !x.Is(CustomRoles.Madmate))
+                    .Do(x => x.RPCPlayCustomSound("FlashBang"));
+            }
+            else if (pc.Is(CustomRoles.Rebel))
+            {
+                MadGrenadierBlinding.Remove(pc.PlayerId);
+                MadGrenadierBlinding.Add(pc.PlayerId, GetTimeStamp());
+                Main.AllPlayerControls.Where(x => x.IsModded())
+                    .Where(x => !x.GetCustomRole().IsImpostor() && !x.GetCustomRole().IsNeutral() && !x.GetCustomRole().IsConverted() && !x.Is(CustomRoles.Rebel))
                     .Do(x => x.RPCPlayCustomSound("FlashBang"));
             }
             else
