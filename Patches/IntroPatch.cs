@@ -675,7 +675,7 @@ class BeginImpostorPatch
             yourTeam = new();
             yourTeam.Add(PlayerControl.LocalPlayer);
 
-            if (role != CustomRoles.Parasite) // Parasite and Impostor doesnt know each other
+            if (PlayerControl.LocalPlayer.CheckMMCanSeeImp(CheckImp: false)) // Parasite and Impostor doesnt know each other
             {
                 // Crew postor is counted as madmate but should be a impostor
                 if (Madmate.MadmateKnowWhosImp.GetBool() || role != CustomRoles.Madmate)
@@ -726,7 +726,7 @@ class BeginImpostorPatch
             yourTeam.Add(PlayerControl.LocalPlayer);
 
             // Parasite and Impostor doesnt know each other
-            foreach (var pc in Main.AllAlivePlayerControls.Where(x => !x.AmOwner && !x.Is(CustomRoles.Parasite) && (x.GetCustomRole().IsImpostor() || !x.Is(CustomRoles.Madmate) && x.GetCustomRole().IsMadmate())))
+            foreach (var pc in Main.AllAlivePlayerControls.Where(x => !x.AmOwner && x.CheckMMCanSeeImp()))
             {
                 yourTeam.Add(pc);
             }

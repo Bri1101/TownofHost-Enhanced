@@ -707,7 +707,7 @@ public static class Utils
                             NonCompleteColor = Workhorse.RoleColor;
 
                         var NormalColor = taskState.IsTaskFinished ? TaskCompleteColor : NonCompleteColor;
-                        if (Main.PlayerStates.TryGetValue(playerId, out var ps) && ps.MainRole == CustomRoles.Crewpostor)
+                        if (Main.PlayerStates.TryGetValue(playerId, out var ps) && ps.MainRole is CustomRoles.Crewpostor)
                             NormalColor = Color.red;
 
                         TextColor = comms ? Color.gray : NormalColor;
@@ -2483,7 +2483,7 @@ public static class Utils
     }
     public static void CountAlivePlayers(bool sendLog = false, bool checkGameEnd = false)
     {
-        int AliveImpostorCount = Main.AllAlivePlayerControls.Count(pc => pc.Is(Custom_Team.Impostor));
+        int AliveImpostorCount = CustomRolesHelper.AliveImpNumV3;
         if (Main.AliveImpostorCount != AliveImpostorCount)
         {
             Logger.Info("Number Impostor left: " + AliveImpostorCount, "CountAliveImpostors");

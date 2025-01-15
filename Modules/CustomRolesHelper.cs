@@ -300,6 +300,18 @@ public static class CustomRolesHelper
             CustomRoles.Shapeshifter or
             CustomRoles.Phantom;
     }
+    public static int AliveImpNumV3 => Main.AllAlivePlayerControls.Count(pc => pc.GetCustomRole().IsImpostorTeamV3());
+
+    public static bool CheckMMCanSeeImp(this PlayerControl pc, bool CheckImp = true)
+    {
+        var role = pc.GetCustomRole();
+
+        return (role.IsImpostor() && CheckImp)
+                || (role == CustomRoles.Parasite && AliveImpNumV3 < 2)
+                || (role == CustomRoles.Crewpostor && Crewpostor.CPAndAlliesKnowEachOther.GetBool())
+                || role is CustomRoles.Refugee
+                or CustomRoles.Scammer;
+    }
     public static bool IsCoven(this CustomRoles role)
     {
         return role.GetStaticRoleClass().ThisRoleType is
@@ -1221,6 +1233,7 @@ public static class CustomRolesHelper
     /// </summary>
     public static bool IsCovenTeam(this CustomRoles role) => role.IsCoven() || role == CustomRoles.Enchanted;
     public static bool IsImpostorTeamV3(this CustomRoles role) => role.IsImpostor() || role.IsMadmate();
+    public static bool IsNeutralTeamV3(this CustomRoles role) => role.IsNeutral() && !role.IsMadmate();
     public static bool IsNeutralKillerTeam(this CustomRoles role) => role.IsNK() && !role.IsMadmate();
     public static bool IsPassiveNeutralTeam(this CustomRoles role) => role.IsNonNK() && !role.IsMadmate();
     public static bool IsNNK(this CustomRoles role) => role.IsNeutral() && !role.IsNK();
@@ -1324,18 +1337,16 @@ public static class CustomRolesHelper
            var r when r.IsCoven() => CountTypes.Coven,
            CustomRoles.Enchanted => CountTypes.Coven,
            CustomRoles.Agitater => CountTypes.Agitater,
-           CustomRoles.Parasite => CountTypes.Impostor,
+           var r when r.IsMadmate() => CountTypes.Impostor,
            CustomRoles.SerialKiller => CountTypes.SerialKiller,
            CustomRoles.Quizmaster => Quizmaster.CanKillsAfterMark() ? CountTypes.Quizmaster : CountTypes.Crew,
            CustomRoles.Juggernaut => CountTypes.Juggernaut,
            CustomRoles.Infectious or CustomRoles.Infected => CountTypes.Infectious,
-           CustomRoles.Crewpostor => CountTypes.Impostor,
            CustomRoles.Pyromaniac => CountTypes.Pyromaniac,
            CustomRoles.PlagueDoctor => CountTypes.PlagueDoctor,
            CustomRoles.Virus => CountTypes.Virus,
            CustomRoles.Pickpocket => CountTypes.Pickpocket,
            CustomRoles.Traitor => CountTypes.Traitor,
-           CustomRoles.Refugee => CountTypes.Impostor,
            CustomRoles.Huntsman => CountTypes.Huntsman,
            CustomRoles.Glitch => CountTypes.Glitch,
            CustomRoles.Spiritcaller => CountTypes.Spiritcaller,

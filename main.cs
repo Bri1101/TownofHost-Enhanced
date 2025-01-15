@@ -730,12 +730,12 @@ public enum CustomRoles
     Refugee,
     RiftMaker,
     Saboteur,
+    Scammer,
     Scavenger,
     ShapeMaster,
     Sniper,
     SoulCatcher,
     Stealth,
-    YinYanger,
     Swooper,
     TimeThief,
     Trapster,
@@ -749,6 +749,7 @@ public enum CustomRoles
     Warlock,
     Wildling,
     Witch,
+    YinYanger,
     Zombie,
 
     //Crewmate Ghost
@@ -1108,8 +1109,6 @@ public enum AdditionalWinners
     Quizmaster = CustomRoles.Quizmaster,
     SchrodingersCat = CustomRoles.SchrodingersCat,
     Troller = CustomRoles.Troller,
-    //   NiceMini = CustomRoles.NiceMini,
-    //   Baker = CustomRoles.Baker,
 }
 [Obfuscation(Exclude = true)]
 public enum SuffixModes
