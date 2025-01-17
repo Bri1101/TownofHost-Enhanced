@@ -22,11 +22,6 @@ internal class Scammer : RoleBase
     private static OptionItem OptionCanSellHelpfulAddonToImpostor;
     private static OptionItem OptionSellOnlyEnabledAddons;
 
-    private bool CanAffectNeutral;
-    private bool CanAffectCoven;
-    private bool CanSellHelpfulAddonToImpostor;
-    private bool CanSellOnlyEnabledAddons;
-
     private static List<CustomRoles> addons = [];
 
     public override void SetupCustomOption()
@@ -44,15 +39,10 @@ internal class Scammer : RoleBase
 
         addons.AddRange(GroupedAddons[AddonTypes.Helpful]);
         addons.AddRange(GroupedAddons[AddonTypes.Harmful]);
-        if (CanSellOnlyEnabledAddons)
+        if (OptionSellOnlyEnabledAddons.GetBool())
         {
             addons = addons.Where(role => role.GetMode() != 0).ToList();
         }
-
-        CanAffectNeutral = OptionAffectNeutral.GetBool();
-        CanAffectCoven = OptionAffectCoven.GetBool();
-        CanSellHelpfulAddonToImpostor = OptionCanSellHelpfulAddonToImpostor.GetBool();
-        CanSellOnlyEnabledAddons = OptionSellOnlyEnabledAddons.GetBool();
     }
 
     public override bool CanUseKillButton(PlayerControl pc) => false;
@@ -87,12 +77,12 @@ internal class Scammer : RoleBase
             PlayerControl target = AllAlivePlayer.RandomElement();
 
             if (target.GetCustomRole().IsCrewmate()
-                || (target.GetCustomRole().IsNeutralTeamV3() && CanAffectNeutral)
-                || (target.GetCustomRole().IsCoven() && CanAffectCoven))
+                || (target.GetCustomRole().IsNeutralTeamV3() && OptionAffectNeutral.GetBool())
+                || (target.GetCustomRole().IsCoven() && OptionAffectCoven.GetBool()))
             {
                 addon = harmful.RandomElement();
             }
-            else if (target.GetCustomRole().IsImpostorTeamV3() && CanSellHelpfulAddonToImpostor)
+            else if (target.GetCustomRole().IsImpostorTeamV3() && OptionCanSellHelpfulAddonToImpostor.GetBool())
             {
                 addon = helpful.RandomElement();
             }
