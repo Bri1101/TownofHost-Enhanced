@@ -108,7 +108,7 @@ internal class Altruist : RoleBase
             {
                 foreach (var pc in Main.AllAlivePlayerControls)
                 {
-                    if (pc.GetCustomRole().IsCrewmate()) continue;
+                    if (pc.IsCrewmate()) continue;
 
                     var getAlert = false;
                     var getArrow = false;

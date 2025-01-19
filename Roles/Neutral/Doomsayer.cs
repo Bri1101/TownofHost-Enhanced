@@ -160,7 +160,7 @@ internal class Doomsayer : RoleBase
             guesser.ShowInfoMessage(isUI, GetString("GuessNotAllowed"));
             return true;
         }
-        if (role.IsCrewmate() && !DCanGuessCrewmates.GetBool())
+        if (target.IsCrewmate() && !DCanGuessCrewmates.GetBool())
         {
             guesser.ShowInfoMessage(isUI, GetString("GuessNotAllowed"));
             return true;

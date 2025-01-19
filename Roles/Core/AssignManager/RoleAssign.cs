@@ -1,4 +1,5 @@
 ﻿using AmongUs.GameOptions;
+using TOHE.Roles.AddOns.Crewmate;
 using TOHE.Roles.Double;
 using TOHE.Roles.Impostor;
 using TOHE.Roles.Neutral;
@@ -41,7 +42,7 @@ public class RoleAssign
 
         if (NKmaxOpt > 0 && NKmaxOpt >= NKminOpt)
         {
-            ResultNKnum = rd.Next(NKminOpt, NKmaxOpt + 1);
+            ResultNKnum = rd.Next(NKminOpt, NKmaxOpt + Bloodthirst.ExtraNKSpotBloodthirst);
         }
 
         if (NAmaxOpt > 0 && NAmaxOpt >= NAminOpt)

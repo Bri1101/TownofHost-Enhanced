@@ -1081,6 +1081,7 @@ public enum CustomWinner
     Shocker = CustomRoles.Shocker,
     Apocalypse = CustomRoles.Apocalypse,
     Coven = CustomRoles.Coven,
+    Bloodthirst = CustomRoles.Bloodthirst,
 }
 [Obfuscation(Exclude = true)]
 public enum AdditionalWinners
@@ -1108,8 +1109,6 @@ public enum AdditionalWinners
     Quizmaster = CustomRoles.Quizmaster,
     SchrodingersCat = CustomRoles.SchrodingersCat,
     Troller = CustomRoles.Troller,
-    //   NiceMini = CustomRoles.NiceMini,
-    //   Baker = CustomRoles.Baker,
 }
 [Obfuscation(Exclude = true)]
 public enum SuffixModes

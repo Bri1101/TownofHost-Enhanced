@@ -5,6 +5,7 @@ namespace TOHE.Roles.Core.AssignManager;
 
 public static class AddonAssign
 {
+    public static Dictionary<byte, List<CustomRoles>> SetAddOns = [];
     private static readonly HashSet<CustomRoles> AddonRolesList = [];
 
     private static bool NotAssignAddOnInGameStarted(CustomRoles role)
@@ -19,12 +20,9 @@ public static class AddonAssign
             case CustomRoles.Madmate when Madmate.MadmateSpawnMode.GetInt() != 0:
             case CustomRoles.Glow or CustomRoles.Mare when GameStates.FungleIsActive:
                 return true;
+            case CustomRoles.Bloodthirst:
+                return true;
         }
-
-        /*else if (Options.IsActiveDleks) // Dleks
-        {
-            if (role is CustomRoles.Nimble or CustomRoles.Burst or CustomRoles.Circumvent) continue;
-        }*/
 
         return false;
     }
@@ -121,7 +119,7 @@ public static class AddonAssign
             if (RawCount == -1) count = Math.Clamp(role.GetCount(), 0, allPlayers.Count);
             if (count <= 0) return;
             for (var i = 0; i < count; i++)
-            {
+                {
                 // if the number of all players is 0
                 if (!allPlayers.Any()) return;
 
@@ -174,7 +172,7 @@ public static class AddonAssign
                 || pc.Is(CustomRoles.Mini)
                 || pc.Is(CustomRoles.NiceMini)
                 || pc.Is(CustomRoles.EvilMini)
-                || (pc.GetCustomRole().IsCrewmate() && !Options.CrewCanBeInLove.GetBool())
+                || (pc.IsCrewmate() && !Options.CrewCanBeInLove.GetBool())
                 || (pc.GetCustomRole().IsNeutral() && !Options.NeutralCanBeInLove.GetBool())
                 || (pc.GetCustomRole().IsImpostor() && !Options.ImpCanBeInLove.GetBool()))
                 continue;

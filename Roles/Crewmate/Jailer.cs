@@ -182,7 +182,7 @@ internal class Jailer : RoleBase
         return (role.IsNB() && NBCanBeExe.GetBool()) ||
                 (role.IsNC() && NCCanBeExe.GetBool()) ||
                 (role.IsNE() && NECanBeExe.GetBool()) ||
-                (role.IsNK() && NKCanBeExe.GetBool()) ||
+                ((role.IsNK() || role == CustomRoles.Bloodthirst) && NKCanBeExe.GetBool()) ||
                 (role.IsNA() && NACanBeExe.GetBool()) ||
                 (role.IsCoven() && CovenCanBeExe.GetBool()) ||
                 (role.IsCrewKiller() && CKCanBeExe.GetBool()) ||
@@ -205,7 +205,7 @@ internal class Jailer : RoleBase
                     CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.Execution, targetIdByte);
                     tpc.SetRealKiller(player);
                 }
-                if (!CanBeExecuted(tpc.GetCustomRole()) && !player.IsAnySubRole(x => x.IsConverted() && x != CustomRoles.Soulless))
+                if (!CanBeExecuted(tpc.GetCustomRole()) && !player.IsAnySubRole(x => (x.IsConverted() || x is CustomRoles.Bloodthirst) && x is not CustomRoles.Soulless))
                 {
                     JailerExeLimit[playerId] = 0;
                 }

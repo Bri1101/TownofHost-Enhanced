@@ -97,6 +97,24 @@ class CheckMurderPatch
             return false;
         }
 
+        if (killer.PlayerId != target.PlayerId)
+        {
+            switch (killer.Is(CustomRoles.Bloodthirst))
+            {
+                case false when !CheckMurder():
+                    return false;
+                case true when killer.GetCustomRole().GetDYRole() == RoleTypes.Impostor:
+                    if (killer.CheckDoubleTrigger(target, () =>
+                    {
+                        if (CheckMurder()) killer.RpcCheckAndMurder(target);
+                    }))
+                        killer.RpcCheckAndMurder(target);
+                    return false;
+            }
+
+            bool CheckMurder() => Main.PlayerStates[killer.PlayerId].RoleClass.OnCheckMurderAsKiller(killer, target) || Main.PlayerStates[killer.PlayerId].RoleClass.ForcedCheckMurderAsKiller(killer, target);
+        }
+
         killer.ResetKillCooldown();
         Logger.Info($"Kill Cooldown Resets", "CheckMurder");
 
@@ -1718,10 +1736,6 @@ class PlayerControlCompleteTaskPatch
 
                         case CustomRoles.Tired when player.IsAlive():
                             Tired.AfterActionTasks(player);
-                            break;
-
-                        case CustomRoles.Bloodthirst when player.IsAlive():
-                            Bloodthirst.OnTaskComplete(player);
                             break;
 
                         case CustomRoles.Ghoul when taskState.CompletedTasksCount >= taskState.AllTasksCount:

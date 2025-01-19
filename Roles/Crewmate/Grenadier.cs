@@ -18,7 +18,7 @@ internal class Grenadier : RoleBase
     public static bool HasEnabled => CustomRoleManager.HasEnabled(CustomRoles.Grenadier);
     public override CustomRoles ThisRoleBase => CustomRoles.Engineer;
     public override Custom_RoleType ThisRoleType => Custom_RoleType.CrewmateSupport;
-    public override bool BlockMoveInVent(PlayerControl pc) => true;
+    public override bool BlockMoveInVent(PlayerControl pc) => !pc.Is(CustomRoles.Bloodthirst);
     //==================================================================\\
 
     private static readonly Dictionary<byte, long> GrenadierBlinding = [];
@@ -57,13 +57,16 @@ internal class Grenadier : RoleBase
     public override void Add(byte playerId)
     {
         AbilityLimit = GrenadierSkillMaxOfUseage.GetFloat();
-        //CustomRoleManager.OnFixedUpdateLowLoadOthers.Add(OnGrenaderFixOthers);
     }
 
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
     {
-        AURoleOptions.EngineerCooldown = GrenadierSkillCooldown.GetFloat();
-        AURoleOptions.EngineerInVentMaxTime = 1;
+        var player = playerId.GetPlayer();
+        if (player.Is(CustomRoles.Bloodthirst))
+            AURoleOptions.ShapeshifterCooldown = GrenadierSkillCooldown.GetFloat() + GrenadierSkillDuration.GetFloat();
+        else
+            AURoleOptions.EngineerCooldown = GrenadierSkillCooldown.GetFloat();
+            AURoleOptions.EngineerInVentMaxTime = 1;
     }
     public static void ApplyGameOptionsForOthers(IGameOptions opt, PlayerControl player)
     {
@@ -96,8 +99,61 @@ internal class Grenadier : RoleBase
         MadGrenadierBlinding.Clear();
     }
 
+    public override void UnShapeShiftButton(PlayerControl shapeshifter)
+    {
+        if (shapeshifter.Is(CustomRoles.Bloodthirst)){
+            if (AbilityLimit >= 1)
+            {
+                if (shapeshifter.Is(CustomRoles.Madmate))
+                {
+                    MadGrenadierBlinding.Remove(shapeshifter.PlayerId);
+                    MadGrenadierBlinding.Add(shapeshifter.PlayerId, GetTimeStamp());
+                    Main.AllPlayerControls.Where(x => x.IsModded())
+                        .Where(x => !x.GetCustomRole().IsImpostorTeam() && !x.Is(CustomRoles.Madmate))
+                        .Do(x => x.RPCPlayCustomSound("FlashBang"));
+                }
+                // Why in the world is there a separate list for Mad, whatever i guess -- Marg
+                else if (shapeshifter.Is(CustomRoles.Enchanted))
+                {
+                    MadGrenadierBlinding.Remove(shapeshifter.PlayerId);
+                    MadGrenadierBlinding.Add(shapeshifter.PlayerId, GetTimeStamp());
+                    Main.AllPlayerControls.Where(x => x.IsModded())
+                        .Where(x => !x.GetCustomRole().IsCoven() && !x.Is(CustomRoles.Enchanted))
+                        .Do(x => x.RPCPlayCustomSound("FlashBang"));
+                }
+                else if (shapeshifter.Is(CustomRoles.Admired))
+                {
+                    GrenadierBlinding.Remove(shapeshifter.PlayerId);
+                    GrenadierBlinding.Add(shapeshifter.PlayerId, GetTimeStamp());
+                    Main.AllPlayerControls.Where(x => x.IsModded())
+                        .Where(x => x.GetCustomRole().IsImpostor() || (x.GetCustomRole().IsNeutral() && GrenadierCanAffectNeutral.GetBool()) || (x.GetCustomRole().IsCoven() && GrenadierCanAffectCoven.GetBool()))
+                        .Do(x => x.RPCPlayCustomSound("FlashBang"));
+                }
+                else
+                {
+                    MadGrenadierBlinding.Remove(shapeshifter.PlayerId);
+                    MadGrenadierBlinding.Add(shapeshifter.PlayerId, GetTimeStamp());
+                    Main.AllPlayerControls.Where(x => x.IsModded())
+                        .Where(x => !x.Is(CustomRoles.Bloodthirst))
+                        .Do(x => x.RPCPlayCustomSound("FlashBang"));
+                }
+                shapeshifter.RPCPlayCustomSound("FlashBang");
+                shapeshifter.Notify(GetString("AbilityInUse"), GrenadierSkillDuration.GetFloat());
+                AbilityLimit -= 1;
+                SendSkillRPC();
+                MarkEveryoneDirtySettings();
+            }
+            else
+            {
+                shapeshifter.Notify(GetString("OutOfAbilityUsesDoMoreTasks"));
+            }
+        }
+    }
+
     public override void OnEnterVent(PlayerControl pc, Vent vent)
     {
+        if (pc.Is(CustomRoles.Bloodthirst)) return;
+
         if (AbilityLimit >= 1)
         {
             if (pc.Is(CustomRoles.Madmate))
@@ -116,6 +172,9 @@ internal class Grenadier : RoleBase
                 Main.AllPlayerControls.Where(x => x.IsModded())
                     .Where(x => !x.GetCustomRole().IsCoven() && !x.Is(CustomRoles.Enchanted))
                     .Do(x => x.RPCPlayCustomSound("FlashBang"));
+            }
+            else if (pc.Is(CustomRoles.Bloodthirst))
+            {
             }
             else
             {
@@ -158,7 +217,7 @@ internal class Grenadier : RoleBase
         }
         if (stopGrenadierSkill || stopMadGrenadierSkill)
         {
-            if (!DisableShieldAnimations.GetBool())
+            if (!DisableShieldAnimations.GetBool() || !player.Is(CustomRoles.Bloodthirst))
             {
                 player.RpcGuardAndKill();
             }

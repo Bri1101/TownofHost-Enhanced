@@ -35,7 +35,7 @@ public class Fragile : IAddon
         var killerRole = killer.GetCustomRole();
         if ((killerRole.IsImpostorTeamV3() && ImpCanKillFragile.GetBool())
             || (killerRole.IsNeutral() && NeutralCanKillFragile.GetBool())
-            || (killerRole.IsCrewmate() && CrewCanKillFragile.GetBool())
+            || (killer.IsCrewmate() && CrewCanKillFragile.GetBool())
             || (killerRole.IsCoven() && CovenCanKillFragile.GetBool()))
         {
             target.SetDeathReason(PlayerState.DeathReason.Shattered);
@@ -55,4 +55,3 @@ public class Fragile : IAddon
         return false;
     }
 }
-

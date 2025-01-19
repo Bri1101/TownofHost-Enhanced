@@ -2,6 +2,7 @@
 using System;
 using System.Text;
 using UnityEngine;
+using static TOHE.Options;
 using static TOHE.Translator;
 using static TOHE.Utils;
 
@@ -14,7 +15,7 @@ internal class Lighter : RoleBase
     private const int Id = 8400;
     public override CustomRoles ThisRoleBase => CustomRoles.Engineer;
     public override Custom_RoleType ThisRoleType => Custom_RoleType.CrewmateSupport;
-    public override bool BlockMoveInVent(PlayerControl pc) => true;
+    public override bool BlockMoveInVent(PlayerControl pc) => !pc.Is(CustomRoles.Bloodthirst);
     //==================================================================\\
 
     private static OptionItem LighterVisionNormal;
@@ -28,18 +29,18 @@ internal class Lighter : RoleBase
 
     public override void SetupCustomOption()
     {
-        Options.SetupSingleRoleOptions(Id, TabGroup.CrewmateRoles, CustomRoles.Lighter, 1);
-        LighterSkillCooldown = FloatOptionItem.Create(Id + 10, "LighterSkillCooldown", new(1f, 180f, 1f), 25f, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Lighter])
+        SetupSingleRoleOptions(Id, TabGroup.CrewmateRoles, CustomRoles.Lighter, 1);
+        LighterSkillCooldown = FloatOptionItem.Create(Id + 10, "LighterSkillCooldown", new(1f, 180f, 1f), 25f, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lighter])
             .SetValueFormat(OptionFormat.Seconds);
-        LighterSkillDuration = FloatOptionItem.Create(Id + 11, "LighterSkillDuration", new(1f, 180f, 1f), 10f, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Lighter])
+        LighterSkillDuration = FloatOptionItem.Create(Id + 11, "LighterSkillDuration", new(1f, 180f, 1f), 10f, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lighter])
             .SetValueFormat(OptionFormat.Seconds);
-        LighterVisionNormal = FloatOptionItem.Create(Id + 12, "LighterVisionNormal", new(0f, 5f, 0.05f), 1.35f, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Lighter])
+        LighterVisionNormal = FloatOptionItem.Create(Id + 12, "LighterVisionNormal", new(0f, 5f, 0.05f), 1.35f, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lighter])
             .SetValueFormat(OptionFormat.Multiplier);
-        LighterVisionOnLightsOut = FloatOptionItem.Create(Id + 13, "LighterVisionOnLightsOut", new(0f, 5f, 0.05f), 0.5f, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Lighter])
+        LighterVisionOnLightsOut = FloatOptionItem.Create(Id + 13, "LighterVisionOnLightsOut", new(0f, 5f, 0.05f), 0.5f, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lighter])
             .SetValueFormat(OptionFormat.Multiplier);
-        LighterSkillMaxOfUseage = IntegerOptionItem.Create(Id + 14, "AbilityUseLimit", new(0, 180, 1), 4, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Lighter])
+        LighterSkillMaxOfUseage = IntegerOptionItem.Create(Id + 14, "AbilityUseLimit", new(0, 180, 1), 4, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lighter])
             .SetValueFormat(OptionFormat.Times);
-        LighterAbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(Id + 15, "AbilityUseGainWithEachTaskCompleted", new(0f, 5f, 0.1f), 1f, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Lighter])
+        LighterAbilityUseGainWithEachTaskCompleted = FloatOptionItem.Create(Id + 15, "AbilityUseGainWithEachTaskCompleted", new(0f, 5f, 0.1f), 1f, TabGroup.CrewmateRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lighter])
             .SetValueFormat(OptionFormat.Times);
     }
     public override void Init()
@@ -60,7 +61,7 @@ internal class Lighter : RoleBase
         if (!lowLoad && Timer != 0 && Timer + LighterSkillDuration.GetInt() < nowTime)
         {
             Timer = 0;
-            if (!Options.DisableShieldAnimations.GetBool())
+            if (!DisableShieldAnimations.GetBool() || !player.Is(CustomRoles.Bloodthirst))
             {
                 player.RpcGuardAndKill();
             }
@@ -72,12 +73,33 @@ internal class Lighter : RoleBase
             player.MarkDirtySettings();
         }
     }
+    public override void UnShapeShiftButton(PlayerControl shapeshifter)
+    {
+        if (shapeshifter.Is(CustomRoles.Bloodthirst))
+        {
+            if (AbilityLimit >= 1)
+            {
+                Timer = GetTimeStamp();
+                shapeshifter.Notify(GetString("AbilityInUse"), LighterSkillDuration.GetFloat());
+                AbilityLimit--;
+                shapeshifter.MarkDirtySettings();
+            }
+            else
+            {
+                shapeshifter.Notify(GetString("OutOfAbilityUsesDoMoreTasks"));
+            }
+
+            SendSkillRPC();
+        }
+    }
     public override void OnEnterVent(PlayerControl pc, Vent vent)
     {
+        if (pc.Is(CustomRoles.Bloodthirst)) return;
+
         if (AbilityLimit >= 1)
         {
             Timer = GetTimeStamp();
-            if (!Options.DisableShieldAnimations.GetBool()) pc.RpcGuardAndKill(pc);
+            if (!DisableShieldAnimations.GetBool() || !pc.Is(CustomRoles.Bloodthirst)) pc.RpcGuardAndKill(pc);
             pc.Notify(GetString("AbilityInUse"), LighterSkillDuration.GetFloat());
             AbilityLimit--;
             pc.MarkDirtySettings();
@@ -116,8 +138,12 @@ internal class Lighter : RoleBase
     }
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
     {
-        AURoleOptions.EngineerInVentMaxTime = 1;
-        AURoleOptions.EngineerCooldown = LighterSkillCooldown.GetFloat();
+        var player = playerId.GetPlayer();
+        if (player.Is(CustomRoles.Bloodthirst))
+            AURoleOptions.ShapeshifterCooldown = LighterSkillCooldown.GetFloat() + LighterSkillDuration.GetFloat();
+        else
+            AURoleOptions.EngineerInVentMaxTime = 1;
+            AURoleOptions.EngineerCooldown = LighterSkillCooldown.GetFloat();
 
         if (Timer != 0)
         {

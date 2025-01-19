@@ -253,6 +253,8 @@ internal class StartGameHostPatch
 {
     private static AmongUsClient thiz;
 
+    public static readonly Dictionary<CustomRoles, List<byte>> BasisChangingAddons = [];
+
     private static RoleOptionsCollectionV08 RoleOpt => Main.NormalOptions.roleOptions;
     private static Dictionary<RoleTypes, int> RoleTypeNums = [];
     public static void UpdateRoleTypeNums()
@@ -383,6 +385,70 @@ internal class StartGameHostPatch
                 RoleOpt.SetRoleRate(roleType.Key, roleNum, roleType.Value > 0 ? 100 : RoleOpt.GetChancePerGame(roleType.Key));
             }
 
+            #region BasisChangingAddonsSetup
+
+            BasisChangingAddons.Clear();
+
+            var rd = IRandom.Instance;
+
+            if (Options.CurrentGameMode == CustomGameMode.Standard)
+            {
+                bool bloodthirstSpawn = rd.Next(1, 100) <= (Options.CustomAdtRoleSpawnRate.TryGetValue(CustomRoles.Bloodthirst, out var option0) ? option0.GetFloat() : 0) && CustomRoles.Bloodthirst.IsEnable();
+
+                HashSet<byte> bloodthirstList = [];
+
+                if (bloodthirstSpawn)
+                {
+                    foreach (var player in Main.AllPlayerControls)
+                    {
+                        if (IsBasisChangingPlayer(player.PlayerId, CustomRoles.Bloodthirst)) continue;
+
+                        var kp = RoleAssign.RoleResult.FirstOrDefault(x => x.Key == player.PlayerId);
+
+                        if (kp.Value.IsCrewmate())
+                        {
+                            if (!kp.Value.IsTaskBasedCrewmate()) bloodthirstList.Add(player.PlayerId);
+                        }
+                    }
+                }
+
+                var roleSpawnMapping = new Dictionary<CustomRoles, (bool SpawnFlag, HashSet<byte> RoleList)>()
+                {
+                    { CustomRoles.Bloodthirst, (bloodthirstSpawn, bloodthirstList) }
+                };
+
+                for (int i = 0; i < roleSpawnMapping.Count; i++)
+                {
+                    (CustomRoles addon, (bool SpawnFlag, HashSet<byte> RoleList) value) = roleSpawnMapping.ElementAt(i);
+                    if (value.RoleList.Count == 0) value.SpawnFlag = false;
+
+                    if (Main.EnableGM.Value) value.RoleList.Remove(0);
+
+                    if (AddonAssign.SetAddOns.Values.Any(x => x.Contains(addon)))
+                    {
+                        value.SpawnFlag = true;
+                        var newRoleList = AddonAssign.SetAddOns.Where(x => x.Value.Contains(addon)).Select(x => x.Key).ToHashSet();
+                        if (value.RoleList.Count != 1 || value.RoleList.First() != newRoleList.First()) value.RoleList = newRoleList;
+
+                        roleSpawnMapping[addon] = value;
+                    }
+                }
+
+                foreach ((CustomRoles addon, (bool spawnFlag, HashSet<byte> roleList)) in roleSpawnMapping)
+                {
+                    if (spawnFlag)
+                    {
+                        foreach ((CustomRoles otherAddon, (bool otherSpawnFlag, _)) in roleSpawnMapping)
+                            if (otherAddon != addon && otherSpawnFlag && BasisChangingAddons.TryGetValue(otherAddon, out var otherList))
+                                roleList.ExceptWith(otherList);
+
+                        BasisChangingAddons[addon] = roleList.Shuffle().Take(addon.GetCount()).ToList();
+                    }
+                }
+            }
+
+            #endregion
+
             Logger.Msg("Is Started", "AssignRoles");
 
             //Start CustomRpcSender
@@ -430,9 +496,23 @@ internal class StartGameHostPatch
 
             foreach (var kv in RoleAssign.RoleResult)
             {
-                if (kv.Value.IsDesyncRole()) continue;
+                if (kv.Value.IsDesyncRole() || IsBasisChangingPlayer(kv.Key, CustomRoles.Bloodthirst)) continue;
 
-                AssignCustomRole(kv.Value, Utils.GetPlayerById(kv.Key));
+                AssignCustomRole(kv.Value, kv.Key.GetPlayer());
+            }
+
+            BasisChangingAddons.Do(x => x.Value.Do(y => Main.PlayerStates[y].SetSubRole(x.Key)));
+
+            foreach (var item in AddonAssign.SetAddOns)
+            {
+                if (Main.PlayerStates.TryGetValue(item.Key, out var state))
+                {
+                    foreach (var role in item.Value)
+                    {
+                        if (role is CustomRoles.Bloodthirst) continue;
+                        state.SetSubRole(role);
+                    }
+                }
             }
 
             try
@@ -531,6 +611,8 @@ internal class StartGameHostPatch
         RpcSetRoleReplacer.EndReplace();
         yield break;
     }
+
+    public static bool IsBasisChangingPlayer(byte id, CustomRoles role) => BasisChangingAddons.TryGetValue(role, out var list) && list.Contains(id);
 
     public static void AssignDesyncRole(CustomRoles role, PlayerControl player, Dictionary<byte, CustomRpcSender> senders, Dictionary<(byte, byte), (RoleTypes, CustomRoles)> rolesMap, RoleTypes BaseRole, RoleTypes hostBaseRole = RoleTypes.Crewmate)
     {
@@ -731,8 +813,19 @@ public static class RpcSetRoleReplacer
     }
     public static void AssignDesyncRoles()
     {
-        foreach (var (playerId, role) in RoleAssign.RoleResult.Where(x => x.Value.IsDesyncRole()))
-            StartGameHostPatch.AssignDesyncRole(role, Utils.GetPlayerById(playerId), Senders, RoleMap, BaseRole: role.GetDYRole());
+        // Assign desync roles
+        foreach ((byte playerId, CustomRoles role) in RoleAssign.RoleResult.Where(x => x.Value.IsDesyncRole() || StartGameHostPatch.IsBasisChangingPlayer(x.Key, CustomRoles.Bloodthirst)).ToArray())
+            StartGameHostPatch.AssignDesyncRole(role, Utils.GetPlayerById(playerId), Senders, RoleMap, BaseRole: ForceImp(playerId)
+                ? role is CustomRoles.Pacifist
+                or CustomRoles.Grenadier
+                or CustomRoles.Mole
+                or CustomRoles.Veteran
+                or CustomRoles.Lighter
+                or CustomRoles.TimeMaster ? RoleTypes.Shapeshifter : RoleTypes.Impostor : role.GetDYRole());
+
+        return;
+
+        bool ForceImp(byte id) => StartGameHostPatch.IsBasisChangingPlayer(id, CustomRoles.Bloodthirst);
     }
     public static void SendRpcForDesync()
     {
@@ -746,6 +839,11 @@ public static class RpcSetRoleReplacer
             if (player == null || role.IsDesyncRole()) continue;
 
             var roleType = role.GetRoleTypes();
+
+            if (StartGameHostPatch.BasisChangingAddons.Find(x => x.Value.Contains(playerId), out var kvp))
+            {
+                if (kvp.Key == CustomRoles.Bloodthirst) continue;
+            }
 
             StoragedData.Add(playerId, roleType);
 

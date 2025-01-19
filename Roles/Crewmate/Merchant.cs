@@ -119,24 +119,14 @@ internal class Merchant : RoleBase
         List<PlayerControl> AllAlivePlayer =
             Main.AllAlivePlayerControls.Where(x =>
                 x.PlayerId != player.PlayerId
-                &&
-                (!x.Is(CustomRoles.Stubborn))
-                &&
-                !addon.IsConverted()
-                &&
-                CustomRolesHelper.CheckAddonConfilct(addon, x, checkLimitAddons: false)
-                &&
-                (!Cleanser.CantGetAddon() || (Cleanser.CantGetAddon() && !x.Is(CustomRoles.Cleansed)))
-                &&
-                (
-                    (OptionCanTargetCrew.GetBool() && x.GetCustomRole().IsCrewmate())
-                    ||
-                    (OptionCanTargetImpostor.GetBool() && x.GetCustomRole().IsImpostor())
-                    ||
-                    (OptionCanTargetNeutral.GetBool() && x.GetCustomRole().IsNeutral())
-                    ||
-                    (OptionCanTargetCoven.GetBool() && x.GetCustomRole().IsCoven())
-                )
+                && (!x.Is(CustomRoles.Stubborn))
+                && !addon.IsConverted()
+                && CustomRolesHelper.CheckAddonConfilct(addon, x, checkLimitAddons: false)
+                && (!Cleanser.CantGetAddon() || (Cleanser.CantGetAddon() && !x.Is(CustomRoles.Cleansed)))
+                && ((OptionCanTargetCrew.GetBool() && x.IsCrewmate()) ||
+                    (OptionCanTargetImpostor.GetBool() && x.GetCustomRole().IsImpostor()) ||
+                    (OptionCanTargetNeutral.GetBool() && x.GetCustomRole().IsNeutral()) ||
+                    (OptionCanTargetCoven.GetBool() && x.GetCustomRole().IsCoven()))
             ).ToList();
 
         if (AllAlivePlayer.Any())
@@ -146,18 +136,15 @@ internal class Merchant : RoleBase
 
             if (helpfulAddon && OptionSellOnlyHarmfulToEvil.GetBool())
             {
-                AllAlivePlayer = AllAlivePlayer.Where(a => a.GetCustomRole().IsCrewmate()).ToList();
+                AllAlivePlayer = AllAlivePlayer.Where(a => a.IsCrewmate()).ToList();
             }
 
             if (harmfulAddon && OptionSellOnlyHelpfulToCrew.GetBool())
             {
                 AllAlivePlayer = AllAlivePlayer.Where(a =>
-                    a.GetCustomRole().IsImpostor()
-                    ||
-                    a.GetCustomRole().IsNeutral()
-                    ||
+                    a.GetCustomRole().IsImpostor() ||
+                    a.GetCustomRole().IsNeutral() ||
                     a.GetCustomRole().IsCoven()
-
                 ).ToList();
             }
 

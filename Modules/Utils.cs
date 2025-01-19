@@ -437,7 +437,7 @@ public static class Utils
     public static Color GetTeamColor(PlayerControl player)
     {
         string hexColor = string.Empty;
-        var Team = player.GetCustomRole().GetCustomRoleTeam();
+        var Team = player.GetCustomRoleTeam();
 
         switch (Team)
         {
@@ -547,6 +547,7 @@ public static class Utils
                             case CustomRoles.Contagious:
                             case CustomRoles.Admired:
                             case CustomRoles.Enchanted:
+                            case CustomRoles.Bloodthirst:
                                 RoleColor = GetRoleColor(subRole);
                                 RoleText = GetRoleString($"{subRole}-") + RoleText;
                                 break;
@@ -646,6 +647,9 @@ public static class Utils
                     break;
                 case CustomRoles.Mundane:
                     if (!hasTasks) hasTasks = !ForRecompute;
+                    break;
+                case CustomRoles.Bloodthirst:
+                    hasTasks = false;
                     break;
 
             }
@@ -1788,7 +1792,7 @@ public static class Utils
         }
         else if (!target.IsAnySubRole(x => x.IsConverted()))
         {
-            team = player.GetCustomRole().GetCustomRoleTeam();
+            team = player.GetCustomRoleTeam();
             return target.Is(team);
         }
 
@@ -1849,7 +1853,7 @@ public static class Utils
 
         string IconText = "<color=#ffffff>|</color>";
         string Font = "<font=\"VCR SDF\" material=\"VCR Black Outline\">";
-        string SelfTeamName = $"<size=450%>{IconText} {Font}{ColorString(GetTeamColor(player), $"{player.GetCustomRole().GetCustomRoleTeam()}")}</font> {IconText}</size><size=900%>\n \n</size>\r\n";
+        string SelfTeamName = $"<size=450%>{IconText} {Font}{ColorString(GetTeamColor(player), $"{player.GetCustomRoleTeam()}")}</font> {IconText}</size><size=900%>\n \n</size>\r\n";
         string SelfRoleName = $"<size=185%>{Font}{ColorString(player.GetRoleColor(), GetRoleName(player.GetCustomRole()))}</font></size>";
         string SelfSubRolesName = string.Empty;
         string RoleInfo = $"<size=25%>\n</size><size={GetInfoSize(player.GetRoleInfo())}%>{Font}{ColorString(player.GetRoleColor(), player.GetRoleInfo())}</font></size>";
@@ -2033,7 +2037,7 @@ public static class Utils
                     string Font = "<font=\"VCR SDF\" material=\"VCR Black Outline\">";
 
                     if (seerRole.IsImpostor()) { RoleText = ColorString(GetTeamColor(seer), GetString("TeamImpostor")); }
-                    else if (seerRole.IsCrewmate()) { RoleText = ColorString(GetTeamColor(seer), GetString("TeamCrewmate")); }
+                    else if (seer.IsCrewmate()) { RoleText = ColorString(GetTeamColor(seer), GetString("TeamCrewmate")); }
                     else if (seerRole.IsNeutral()) { RoleText = ColorString(GetTeamColor(seer), GetString("TeamNeutral")); }
                     else if (seerRole.IsMadmate()) { RoleText = ColorString(GetTeamColor(seer), GetString("TeamMadmate")); }
                     else if (seerRole.IsCoven()) { RoleText = ColorString(GetTeamColor(seer), GetString("TeamCoven")); }

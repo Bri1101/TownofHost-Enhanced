@@ -11,7 +11,7 @@ internal class Addict : RoleBase
     private const int Id = 6300;
     public override CustomRoles ThisRoleBase => CustomRoles.Engineer;
     public override Custom_RoleType ThisRoleType => Custom_RoleType.CrewmateBasic;
-    public override bool BlockMoveInVent(PlayerControl pc) => true;
+    public override bool BlockMoveInVent(PlayerControl pc) => !pc.Is(CustomRoles.Bloodthirst);
     //==================================================================\\
 
     private static OptionItem VentCooldown;

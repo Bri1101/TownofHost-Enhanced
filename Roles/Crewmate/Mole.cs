@@ -12,7 +12,7 @@ internal class Mole : RoleBase
     private const int Id = 26000;
     public override CustomRoles ThisRoleBase => CustomRoles.Engineer;
     public override Custom_RoleType ThisRoleType => Custom_RoleType.CrewmateBasic;
-    public override bool BlockMoveInVent(PlayerControl pc) => true;
+    public override bool BlockMoveInVent(PlayerControl pc) => !pc.Is(CustomRoles.Bloodthirst);
     //==================================================================\\
 
     private static OptionItem VentCooldown;
@@ -25,11 +25,25 @@ internal class Mole : RoleBase
     }
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
     {
-        AURoleOptions.EngineerCooldown = VentCooldown.GetFloat();
-        AURoleOptions.EngineerInVentMaxTime = 1;
+        var player = playerId.GetPlayer();
+        if (player.Is(CustomRoles.Bloodthirst))
+            AURoleOptions.ShapeshifterCooldown = VentCooldown.GetFloat();
+        else
+            AURoleOptions.EngineerCooldown = VentCooldown.GetFloat();
+            AURoleOptions.EngineerInVentMaxTime = 1;
+    }
+
+    public override void UnShapeShiftButton(PlayerControl shapeshifter)
+    {
+        if (shapeshifter.Is(CustomRoles.Bloodthirst))
+        {
+            shapeshifter.RpcRandomVentTeleport();
+        }
     }
     public override void OnExitVent(PlayerControl pc, int ventId)
     {
+        if (pc.Is(CustomRoles.Bloodthirst)) return;
+
         float delay = Utils.GetActiveMapId() != 5 ? 0.1f : 0.4f;
 
         _ = new LateTask(() =>

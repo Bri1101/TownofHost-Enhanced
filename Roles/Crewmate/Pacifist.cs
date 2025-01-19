@@ -19,7 +19,7 @@ internal class Pacifist : RoleBase
     public static bool HasEnabled => CustomRoleManager.HasEnabled(CustomRoles.Pacifist);
     public override CustomRoles ThisRoleBase => CustomRoles.Engineer;
     public override Custom_RoleType ThisRoleType => Custom_RoleType.CrewmateSupport;
-    public override bool BlockMoveInVent(PlayerControl pc) => true;
+    public override bool BlockMoveInVent(PlayerControl pc) => !pc.Is(CustomRoles.Bloodthirst);
     //==================================================================\\
 
     private static OptionItem PacifistCooldown;
@@ -40,8 +40,42 @@ internal class Pacifist : RoleBase
     {
         AbilityLimit = PacifistMaxOfUseage.GetInt();
     }
+    public override void UnShapeShiftButton(PlayerControl shapeshifter)
+    {
+        if (shapeshifter.Is(CustomRoles.Bloodthirst))
+        {
+            if (AbilityLimit < 1)
+            {
+                shapeshifter.Notify(GetString("OutOfAbilityUsesDoMoreTasks"));
+            }
+            else
+            {
+                AbilityLimit -= 1;
+
+                Main.AllAlivePlayerControls.Where(x =>
+                shapeshifter.Is(CustomRoles.Admired)
+                    ? x.CanUseKillButton()
+                    : (x.CanUseKillButton() && x.IsCrewmate())
+                ).Do(x =>
+                {
+                    x.RPCPlayCustomSound("Dove");
+                    x.ResetKillCooldown();
+                    x.SetKillCooldown();
+
+                    if (x.Is(CustomRoles.Mercenary))
+                    { Mercenary.ClearSuicideTimer(); }
+
+                    x.Notify(ColorString(GetRoleColor(CustomRoles.Pacifist), GetString("PacifistSkillNotify")));
+                });
+                shapeshifter.RPCPlayCustomSound("Dove");
+                shapeshifter.Notify(string.Format(GetString("PacifistOnGuard"), AbilityLimit));
+            }
+        }
+    }
     public override void OnEnterVent(PlayerControl pc, Vent vent)
     {
+        if (pc.Is(CustomRoles.Bloodthirst)) return;
+
         if (AbilityLimit < 1)
         {
             pc.Notify(GetString("OutOfAbilityUsesDoMoreTasks"));
@@ -49,11 +83,12 @@ internal class Pacifist : RoleBase
         else
         {
             AbilityLimit -= 1;
-            if (!DisableShieldAnimations.GetBool()) pc.RpcGuardAndKill(pc);
+            if (!DisableShieldAnimations.GetBool() || !pc.Is(CustomRoles.Bloodthirst)) pc.RpcGuardAndKill(pc);
+            bool isNonCrew = pc.IsAnySubRole(x => x.IsConvertedV2() || x is CustomRoles.Madmate or CustomRoles.Enchanted or CustomRoles.Bloodthirst);
 
             Main.AllAlivePlayerControls.Where(x =>
-            pc.Is(CustomRoles.Madmate)
-                ? (x.CanUseKillButton() && x.GetCustomRole().IsCrewmate())
+            isNonCrew
+                ? (x.CanUseKillButton() && x.IsCrewmate())
                 : x.CanUseKillButton()
             ).Do(x =>
             {
@@ -82,8 +117,12 @@ internal class Pacifist : RoleBase
     }
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
     {
-        AURoleOptions.EngineerCooldown = PacifistCooldown.GetFloat();
-        AURoleOptions.EngineerInVentMaxTime = 1;
+        var player = playerId.GetPlayer();
+        if (player.Is(CustomRoles.Bloodthirst))
+            AURoleOptions.ShapeshifterCooldown = PacifistCooldown.GetFloat();
+        else
+            AURoleOptions.EngineerCooldown = PacifistCooldown.GetFloat();
+            AURoleOptions.EngineerInVentMaxTime = 1;
     }
     public override string GetProgressText(byte playerId, bool comms)
     {

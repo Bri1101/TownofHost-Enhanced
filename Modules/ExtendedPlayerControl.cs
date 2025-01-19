@@ -6,6 +6,7 @@ using System.Text;
 using TOHE.Modules;
 using TOHE.Patches;
 using TOHE.Roles.AddOns.Common;
+using TOHE.Roles.AddOns.Crewmate;
 using TOHE.Roles.AddOns.Impostor;
 using TOHE.Roles.Core;
 using TOHE.Roles.Coven;
@@ -119,6 +120,16 @@ static class ExtendedPlayerControl
         var playerRole = player.GetCustomRole();
         var newRoleType = newCustomRole.GetRoleTypes();
         RoleTypes remeberRoleType;
+
+        newRoleType = Options.CurrentGameMode switch
+        {
+            CustomGameMode.Standard when StartGameHostPatch.BasisChangingAddons.Find(x => x.Value.Contains(player.PlayerId), out var kvp) => kvp.Key switch
+            {
+                CustomRoles.Bloodthirst when newRoleType is RoleTypes.Crewmate or RoleTypes.Engineer or RoleTypes.Scientist => playerRole is CustomRoles.Mole or CustomRoles.Veteran or CustomRoles.Lighter or CustomRoles.TimeMaster or CustomRoles.Pacifist or CustomRoles.Grenadier ? RoleTypes.Shapeshifter : RoleTypes.Impostor,
+                _ => newRoleType
+            },
+            _ => newRoleType
+        };
 
         var oldRoleIsDesync = playerRole.IsDesyncRole();
         var newRoleIsDesync = newCustomRole.IsDesyncRole();
@@ -926,7 +937,11 @@ static class ExtendedPlayerControl
             return CountTypes.None;
         }
 
-        return Main.PlayerStates.TryGetValue(player.PlayerId, out var State) ? State.countTypes : CountTypes.None;
+        if (!Main.PlayerStates.TryGetValue(player.PlayerId, out var State)) return CountTypes.None;
+
+        if (!player.IsAnySubRole(x => x.IsConverted() || x is CustomRoles.Admired) && !player.HasGhostRole() && State.SubRoles.Contains(CustomRoles.Bloodthirst)) return CountTypes.Bloodthirst;
+
+        return State.countTypes;
     }
     public static DeadBody GetDeadBody(this NetworkedPlayerInfo playerData)
     {
@@ -1064,6 +1079,7 @@ static class ExtendedPlayerControl
         if (!pc.IsAlive() || Pelican.IsEaten(pc.PlayerId) || DollMaster.IsDoll(pc.PlayerId)) return false;
         if (pc.GetClient().GetHashedPuid() == Main.FirstDiedPrevious && !Options.ShieldedCanUseKillButton.GetBool() && MeetingStates.FirstMeeting) return false;
         if (pc.Is(CustomRoles.Killer) || Mastermind.PlayerIsManipulated(pc)) return true;
+        if (pc.Is(CustomRoles.Bloodthirst)) return true;
 
         var playerRoleClass = pc.GetRoleClass();
         if (playerRoleClass != null && playerRoleClass.CanUseKillButton(pc)) return true;
@@ -1076,7 +1092,7 @@ static class ExtendedPlayerControl
         if (!pc.IsAlive() || pc.Data.Role.Role == RoleTypes.GuardianAngel || Pelican.IsEaten(pc.PlayerId)) return false;
 
         var role = pc.GetCustomRole();
-        if (!role.IsImpostor())
+        if (!role.IsImpostor() || pc.Is(CustomRoles.Bloodthirst))
         {
             return role.GetDYRole() is RoleTypes.Impostor or RoleTypes.Shapeshifter;
         }
@@ -1100,6 +1116,7 @@ static class ExtendedPlayerControl
         if (pc.Is(CustomRoles.Killer) || pc.Is(CustomRoles.Nimble)) return true;
         if (DollMaster.IsDoll(pc.PlayerId) || Circumvent.CantUseVent(pc)) return false;
         if (Necromancer.Killer && !pc.Is(CustomRoles.Necromancer)) return false;
+        if (pc.Is(CustomRoles.Bloodthirst)) return true;
         if (Amnesiac.PreviousAmnesiacCanVent(pc)) return true; //this is done because amnesiac has imp basis and if amnesiac remembers a role with different basis then player will not vent as `CanUseImpostorVentButton` is false
 
         var playerRoleClass = pc.GetRoleClass();
@@ -1145,6 +1162,10 @@ static class ExtendedPlayerControl
                         Main.AllPlayerKillCooldown[player.PlayerId] = Mare.KillCooldownInLightsOut.GetFloat();
                         break;
 
+                    case CustomRoles.Bloodthirst:
+                        Main.AllPlayerKillCooldown[player.PlayerId] = Bloodthirst.KillCooldown.GetFloat();
+                        break;
+
                     case CustomRoles.Overclocked:
                         Main.AllPlayerKillCooldown[player.PlayerId] -= Main.AllPlayerKillCooldown[player.PlayerId] * (Overclocked.OverclockedReduction.GetFloat() / 100);
                         break;
@@ -1188,7 +1209,8 @@ static class ExtendedPlayerControl
             CustomRoles.Lovers and not
             CustomRoles.Infected and not
             CustomRoles.Enchanted and not
-            CustomRoles.Contagious;
+            CustomRoles.Contagious and not
+            CustomRoles.Bloodthirst;
     }
 
     public static void AddInSwitchAddons(this PlayerControl Killed, PlayerControl target, CustomRoles Addon = CustomRoles.NotAssigned, CustomRoles? IsAddon = CustomRoles.NotAssigned)
@@ -1253,7 +1275,7 @@ static class ExtendedPlayerControl
         }
         return rangePlayers;
     }
-    public static bool IsNeutralKiller(this PlayerControl player) => player.GetCustomRole().IsNK();
+    public static bool IsNeutralKiller(this PlayerControl player) => player.Is(CustomRoles.Bloodthirst) || player.GetCustomRole().IsNK();
     public static bool IsNeutralBenign(this PlayerControl player) => player.GetCustomRole().IsNB();
     public static bool IsNeutralEvil(this PlayerControl player) => player.GetCustomRole().IsNE();
     public static bool IsNeutralChaos(this PlayerControl player) => player.GetCustomRole().IsNC();
@@ -1287,7 +1309,7 @@ static class ExtendedPlayerControl
         else if (seer.Is(CustomRoles.GM) || target.Is(CustomRoles.GM) || (PlayerControl.LocalPlayer.PlayerId == seer.PlayerId && Main.GodMode.Value)) return true;
         else if (Options.SeeEjectedRolesInMeeting.GetBool() && Main.PlayerStates[target.PlayerId].deathReason == PlayerState.DeathReason.Vote) return true;
         else if (Altruist.HasEnabled && seer.IsMurderedThisRound()) return false;
-        else if (seer.GetCustomRole() == target.GetCustomRole() && seer.GetCustomRole().IsNK()) return true;
+        else if (seer.GetCustomRole() == target.GetCustomRole() && seer.IsNeutralKiller()) return true;
         else if (Options.LoverKnowRoles.GetBool() && seer.Is(CustomRoles.Lovers) && target.Is(CustomRoles.Lovers)) return true;
         else if (Options.ImpsCanSeeEachOthersRoles.GetBool() && seer.Is(Custom_Team.Impostor) && target.Is(Custom_Team.Impostor) && !Main.PlayerStates[seer.PlayerId].IsNecromancer && !Main.PlayerStates[target.PlayerId].IsNecromancer) return true;
         else if (Madmate.MadmateKnowWhosImp.GetBool() && seer.Is(CustomRoles.Madmate) && target.Is(Custom_Team.Impostor) && !Main.PlayerStates[seer.PlayerId].IsNecromancer && !Main.PlayerStates[target.PlayerId].IsNecromancer) return true;
@@ -1333,7 +1355,6 @@ static class ExtendedPlayerControl
         else if (Options.ApocCanSeeEachOthersAddOns.GetBool() && seer.IsNeutralApocalypse() && target.IsNeutralApocalypse() && !subRole.IsBetrayalAddon()) return true;
 
         else if ((subRole is CustomRoles.Madmate
-                or CustomRoles.Sidekick
                 or CustomRoles.Recruit
                 or CustomRoles.Admired
                 or CustomRoles.Charmed
@@ -1498,9 +1519,19 @@ static class ExtendedPlayerControl
         Main.PlayerStates[targetId].deathReason = reason;
     }
 
+    public static bool IsCrewmate(this PlayerControl pc) => !pc.Is(CustomRoles.Bloodthirst) && pc.GetCustomRole().IsCrewmate();
+    public static Custom_Team GetCustomRoleTeam(this PlayerControl pc) => pc.Is(CustomRoles.Bloodthirst) ? Custom_Team.Neutral : pc.GetCustomRole().GetCustomRoleTeam();
+    public static RoleTypes GetRoleTypes(this PlayerControl pc) => pc.GetCustomSubRoles() switch
+    {
+        { } x when x.Contains(CustomRoles.Bloodthirst) && !(pc.GetCustomRole() is CustomRoles.Mole or CustomRoles.Veteran or CustomRoles.Lighter or CustomRoles.TimeMaster or CustomRoles.Pacifist or CustomRoles.Grenadier) => RoleTypes.Impostor,
+        { } x when x.Contains(CustomRoles.Bloodthirst) && (pc.GetCustomRole() is CustomRoles.Mole or CustomRoles.Veteran or CustomRoles.Lighter or CustomRoles.TimeMaster or CustomRoles.Pacifist or CustomRoles.Grenadier) => RoleTypes.Shapeshifter,
+        _ => pc.GetCustomRole().GetRoleTypes(),
+    };
+
     public static bool Is(this PlayerControl target, CustomRoles role) =>
         role > CustomRoles.NotAssigned ? target.GetCustomSubRoles().Contains(role) : target.GetCustomRole() == role;
-    public static bool Is(this PlayerControl target, Custom_Team type) { return target.GetCustomRole().GetCustomRoleTeam() == type; }
+
+    public static bool Is(this PlayerControl target, Custom_Team type) { return target.GetCustomRoleTeam() == type; }
     public static bool Is(this PlayerControl target, RoleTypes type) { return target.GetCustomRole().GetRoleTypes() == type; }
     public static bool Is(this PlayerControl target, CountTypes type) { return target.GetCountTypes() == type; }
     public static bool IsAnySubRole(this PlayerControl target, Func<CustomRoles, bool> predicate) => target != null && target.GetCustomSubRoles().Any() && target.GetCustomSubRoles().Any(predicate);

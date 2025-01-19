@@ -48,7 +48,7 @@ public class Cyber : IAddon
         {
             if (!ImpKnowCyberDead.GetBool() && pc.GetCustomRole().IsImpostor()) continue;
             if (!NeutralKnowCyberDead.GetBool() && pc.GetCustomRole().IsNeutral()) continue;
-            if (!CrewKnowCyberDead.GetBool() && pc.GetCustomRole().IsCrewmate()) continue;
+            if (!CrewKnowCyberDead.GetBool() && pc.IsCrewmate()) continue;
             if (!CovenKnowCyberDead.GetBool() && pc.GetCustomRole().IsCoven()) continue;
 
             if (inMeeting)

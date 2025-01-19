@@ -17,7 +17,7 @@ internal class TimeMaster : RoleBase
     public static bool HasEnabled => CustomRoleManager.HasEnabled(CustomRoles.TimeMaster);
     public override CustomRoles ThisRoleBase => CustomRoles.Engineer;
     public override Custom_RoleType ThisRoleType => Custom_RoleType.CrewmateSupport;
-    public override bool BlockMoveInVent(PlayerControl pc) => true;
+    public override bool BlockMoveInVent(PlayerControl pc) => !pc.Is(CustomRoles.Bloodthirst);
     //==================================================================\\
 
     private static OptionItem TimeMasterSkillCooldown;
@@ -54,8 +54,12 @@ internal class TimeMaster : RoleBase
     }
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
     {
-        AURoleOptions.EngineerCooldown = TimeMasterSkillCooldown.GetFloat();
-        AURoleOptions.EngineerInVentMaxTime = 1;
+        var player = playerId.GetPlayer();
+        if (player.Is(CustomRoles.Bloodthirst))
+            AURoleOptions.ShapeshifterCooldown = TimeMasterSkillCooldown.GetFloat() + TimeMasterSkillDuration.GetFloat();
+        else
+            AURoleOptions.EngineerCooldown = TimeMasterSkillCooldown.GetFloat();
+            AURoleOptions.EngineerInVentMaxTime = 1;
     }
     public override bool OnTaskComplete(PlayerControl player, int completedTaskCount, int totalTaskCount)
     {
@@ -101,8 +105,47 @@ internal class TimeMaster : RoleBase
             }
         return true;
     }
+    public override void UnShapeShiftButton(PlayerControl shapeshifter)
+    {
+        if (shapeshifter.Is(CustomRoles.Bloodthirst))
+        {
+            if (AbilityLimit >= 1)
+            {
+                AbilityLimit -= 1;
+                SendSkillRPC();
+
+                TimeMasterInProtect.Remove(shapeshifter.PlayerId);
+                TimeMasterInProtect.Add(shapeshifter.PlayerId, GetTimeStamp());
+
+                shapeshifter.Notify(GetString("TimeMasterOnGuard"), TimeMasterSkillDuration.GetFloat());
+
+                foreach (var player in Main.AllPlayerControls)
+                {
+                    if (TimeMasterBackTrack.TryGetValue(player.PlayerId, out var position))
+                    {
+                        if (player.CanBeTeleported() && player.PlayerId != shapeshifter.PlayerId)
+                        {
+                            player.RpcTeleport(position);
+                        }
+
+                        TimeMasterBackTrack.Remove(player.PlayerId);
+                    }
+                    else
+                    {
+                        TimeMasterBackTrack[player.PlayerId] = player.GetCustomPosition();
+                    }
+                }
+            }
+            else
+            {
+                shapeshifter.Notify(GetString("OutOfAbilityUsesDoMoreTasks"));
+            }
+        }
+    }
     public override void OnEnterVent(PlayerControl pc, Vent currentVent)
     {
+        if (pc.Is(CustomRoles.Bloodthirst)) return;
+
         if (AbilityLimit >= 1)
         {
             AbilityLimit -= 1;
@@ -111,7 +154,7 @@ internal class TimeMaster : RoleBase
             TimeMasterInProtect.Remove(pc.PlayerId);
             TimeMasterInProtect.Add(pc.PlayerId, GetTimeStamp());
 
-            if (!pc.IsModded())
+            if (!pc.IsModded() || !pc.Is(CustomRoles.Bloodthirst))
             {
                 pc.RpcGuardAndKill(pc);
             }

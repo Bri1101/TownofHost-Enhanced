@@ -28,7 +28,7 @@ public class Hurried : IAddon
     {
         if (pc == null) return false;
         if (!pc.Is(CustomRoles.Hurried)) return true;
-        if (!pc.GetCustomRole().IsCrewmate() && !pc.Is(CustomRoles.Madmate)) return true;
+        if (!pc.IsCrewmate() && !pc.Is(CustomRoles.Madmate)) return true;
 
         if (pc.GetCustomRole().IsTasklessCrewmate()) return true;
         if (pc.Is(CustomRoles.Madmate) && !CanBeOnMadMate.GetBool()) return true;

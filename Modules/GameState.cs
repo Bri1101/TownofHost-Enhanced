@@ -146,7 +146,8 @@ public class PlayerState(byte playerId)
 
             foreach (var subRole in SubRoles.ToArray())
             {
-                RemoveSubRole(subRole);
+                if (subRole is not CustomRoles.Bloodthirst)
+                    RemoveSubRole(subRole);
             }
         }
 
@@ -174,6 +175,16 @@ public class PlayerState(byte playerId)
         {
             case CustomRoles.LastImpostor:
                 SubRoles.Remove(CustomRoles.Mare);
+                break;
+
+            case CustomRoles.Bloodthirst:
+                countTypes = CountTypes.Bloodthirst;
+                SubRoles.Remove(CustomRoles.Workhorse);
+                SubRoles.Remove(CustomRoles.Mundane);
+                SubRoles.Remove(CustomRoles.Hurried);
+                SubRoles.Remove(CustomRoles.Ghoul);
+                SubRoles.Remove(CustomRoles.Torch);
+                SubRoles.Remove(CustomRoles.Nimble);
                 break;
 
             case CustomRoles.Madmate:

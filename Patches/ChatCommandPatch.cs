@@ -462,7 +462,7 @@ internal class ChatCommands
                     var allAlivePlayers = Main.AllAlivePlayerControls;
                     int impnum = allAlivePlayers.Count(pc => pc.Is(Custom_Team.Impostor));
                     int madnum = allAlivePlayers.Count(pc => pc.GetCustomRole().IsMadmate() || pc.Is(CustomRoles.Madmate));
-                    int neutralnum = allAlivePlayers.Count(pc => pc.GetCustomRole().IsNK());
+                    int neutralnum = allAlivePlayers.Count(pc => pc.IsNeutralKiller());
                     int apocnum = allAlivePlayers.Count(pc => pc.IsNeutralApocalypse() || pc.IsTransformedNeutralApocalypse());
                     int covnum = allAlivePlayers.Count(pc => pc.Is(Custom_Team.Coven));
 
@@ -2416,7 +2416,7 @@ internal class ChatCommands
                 int impnum = allAlivePlayers.Count(pc => pc.Is(Custom_Team.Impostor));
                 int madnum = allAlivePlayers.Count(pc => pc.GetCustomRole().IsMadmate() || pc.Is(CustomRoles.Madmate));
                 int apocnum = allAlivePlayers.Count(pc => pc.GetCustomRole().IsNA());
-                int neutralnum = allAlivePlayers.Count(pc => pc.GetCustomRole().IsNK());
+                int neutralnum = allAlivePlayers.Count(pc => pc.IsNeutralKiller());
                 int covnum = allAlivePlayers.Count(pc => pc.Is(Custom_Team.Coven));
 
                 var sub = new StringBuilder();

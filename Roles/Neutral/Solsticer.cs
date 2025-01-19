@@ -301,7 +301,7 @@ internal class Solsticer : RoleBase
         {
             if (SchrodingersCat.teammate.ContainsKey(seer.PlayerId) && target.PlayerId == SchrodingersCat.teammate[seer.PlayerId])
             {
-                if (target.GetCustomRole().IsCrewmate()) return "#8CFFFF";
+                if (target.IsCrewmate()) return "#8CFFFF";
                 else return Main.roleColors[target.GetCustomRole()];
             }
         }
@@ -309,7 +309,7 @@ internal class Solsticer : RoleBase
         {
             if (SchrodingersCat.teammate.ContainsKey(target.PlayerId) && seer.PlayerId == SchrodingersCat.teammate[target.PlayerId])
             {
-                if (seer.GetCustomRole().IsCrewmate()) return "#8CFFFF";
+                if (seer.IsCrewmate()) return "#8CFFFF";
                 else return Main.roleColors[seer.GetCustomRole()];
             }
         }

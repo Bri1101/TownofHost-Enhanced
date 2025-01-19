@@ -18,7 +18,7 @@ internal class Veteran : RoleBase
     public static bool HasEnabled => CustomRoleManager.HasEnabled(CustomRoles.Veteran);
     public override CustomRoles ThisRoleBase => CustomRoles.Engineer;
     public override Custom_RoleType ThisRoleType => Custom_RoleType.CrewmateKilling;
-    public override bool BlockMoveInVent(PlayerControl pc) => true;
+    public override bool BlockMoveInVent(PlayerControl pc) => !pc.Is(CustomRoles.Bloodthirst);
     //==================================================================\\
 
     private static OptionItem VeteranSkillCooldown;
@@ -50,8 +50,12 @@ internal class Veteran : RoleBase
     }
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
     {
-        AURoleOptions.EngineerCooldown = VeteranSkillCooldown.GetFloat();
-        AURoleOptions.EngineerInVentMaxTime = 1;
+        var player = playerId.GetPlayer();
+        if (player.Is(CustomRoles.Bloodthirst))
+            AURoleOptions.ShapeshifterCooldown = VeteranSkillCooldown.GetFloat() + VeteranSkillDuration.GetFloat();
+        else
+            AURoleOptions.EngineerCooldown = VeteranSkillCooldown.GetFloat();
+            AURoleOptions.EngineerInVentMaxTime = 1;
     }
     public override bool OnTaskComplete(PlayerControl player, int completedTaskCount, int totalTaskCount)
     {
@@ -103,7 +107,7 @@ internal class Veteran : RoleBase
         {
             VeteranInProtect.Remove(player.PlayerId);
 
-            if (!DisableShieldAnimations.GetBool())
+            if (!DisableShieldAnimations.GetBool() || !player.Is(CustomRoles.Bloodthirst))
             {
                 player.RpcGuardAndKill();
             }
@@ -115,8 +119,33 @@ internal class Veteran : RoleBase
             player.Notify(string.Format(GetString("AbilityExpired"), AbilityLimit));
         }
     }
+    public override void UnShapeShiftButton(PlayerControl shapeshifter)
+    {
+        if (shapeshifter.Is(CustomRoles.Bloodthirst))
+        {
+            // Ability use limit reached
+            if (AbilityLimit <= 0)
+            {
+                shapeshifter.Notify(GetString("OutOfAbilityUsesDoMoreTasks"));
+                return;
+            }
+
+            // Use ability
+            if (!VeteranInProtect.ContainsKey(shapeshifter.PlayerId))
+            {
+                VeteranInProtect.Remove(shapeshifter.PlayerId);
+                VeteranInProtect.Add(shapeshifter.PlayerId, GetTimeStamp(DateTime.Now));
+                AbilityLimit -= 1;
+                SendSkillRPC();
+                shapeshifter.RPCPlayCustomSound("Gunload");
+                shapeshifter.Notify(GetString("AbilityInUse"), VeteranSkillDuration.GetFloat());
+            }
+        }
+    }
     public override void OnEnterVent(PlayerControl pc, Vent vent)
     {
+        if (pc.Is(CustomRoles.Bloodthirst)) return;
+
         // Ability use limit reached
         if (AbilityLimit <= 0)
         {
@@ -131,14 +160,13 @@ internal class Veteran : RoleBase
             VeteranInProtect.Add(pc.PlayerId, GetTimeStamp(DateTime.Now));
             AbilityLimit -= 1;
             SendSkillRPC();
-            if (!DisableShieldAnimations.GetBool()) pc.RpcGuardAndKill(pc);
+            if (!DisableShieldAnimations.GetBool() || !pc.Is(CustomRoles.Bloodthirst)) pc.RpcGuardAndKill(pc);
             pc.RPCPlayCustomSound("Gunload");
             pc.Notify(GetString("AbilityInUse"), VeteranSkillDuration.GetFloat());
         }
     }
     public override bool CheckBootFromVent(PlayerPhysics physics, int ventId)
         => AbilityLimit < 1;
-
     public override void OnReportDeadBody(PlayerControl reporter, NetworkedPlayerInfo target) => VeteranInProtect.Clear();
 
     public override string GetProgressText(byte playerId, bool comms)

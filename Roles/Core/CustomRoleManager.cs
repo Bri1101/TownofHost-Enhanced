@@ -85,7 +85,7 @@ public static class CustomRoleManager
         return (RoleBase)Activator.CreateInstance(role.GetStaticRoleClass().GetType()); // Converts this.RoleBase back to its type and creates an unique one.
     }
 
-    public static bool HasDesyncRole(this PlayerControl player) => player != null && (player.GetRoleClass().IsDesyncRole || Main.DesyncPlayerList.Contains(player.Data.PlayerId) || player.Is(CustomRoles.Killer));
+    public static bool HasDesyncRole(this PlayerControl player) => player != null && (player.GetRoleClass().IsDesyncRole || player.Is(CustomRoles.Bloodthirst) || Main.DesyncPlayerList.Contains(player.Data.PlayerId) || player.Is(CustomRoles.Killer));
 
     /// <summary>
     /// If the role protect others players
@@ -165,6 +165,9 @@ public static class CustomRoleManager
                         break;
                     case CustomRoles.Mare:
                         Mare.ApplyGameOptions(player.PlayerId);
+                        break;
+                    case CustomRoles.Bloodthirst:
+                        Madmate.ApplyGameOptions(opt);
                         break;
                 }
             }

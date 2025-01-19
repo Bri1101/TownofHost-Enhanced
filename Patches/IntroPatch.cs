@@ -699,7 +699,7 @@ class BeginImpostorPatch
             return true;
         }
 
-        if (role.IsCrewmate() && role.GetDYRole() == RoleTypes.Impostor)
+        if (PlayerControl.LocalPlayer.IsCrewmate() && role.GetDYRole() == RoleTypes.Impostor)
         {
             yourTeam = new();
             yourTeam.Add(PlayerControl.LocalPlayer);
@@ -709,7 +709,7 @@ class BeginImpostorPatch
             return false;
         }
 
-        if (role.IsNeutral())
+        if (role.IsNeutral() || PlayerControl.LocalPlayer.Is(CustomRoles.Bloodthirst))
         {
             yourTeam = new();
             yourTeam.Add(PlayerControl.LocalPlayer);

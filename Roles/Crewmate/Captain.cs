@@ -72,8 +72,8 @@ internal class Captain : RoleBase
                                                            (CaptainCanTargetNB.GetBool() && x.GetCustomRole().IsNB()) ||
                                                            (CaptainCanTargetNE.GetBool() && x.GetCustomRole().IsNE()) ||
                                                            (CaptainCanTargetNC.GetBool() && x.GetCustomRole().IsNC()) ||
-                                                           (CaptainCanTargetNK.GetBool() && x.GetCustomRole().IsNeutralKillerTeam())
-                              || (CaptainCanTargetNA.GetBool() && x.GetCustomRole().IsNA()) ||
+                                                           (CaptainCanTargetNK.GetBool() && x.IsNeutralKiller()) ||
+                                                           (CaptainCanTargetNA.GetBool() && x.GetCustomRole().IsNA()) ||
                                                            (CaptainCanTargetCoven.GetBool() && x.GetCustomRole().IsCovenTeam())
                               )).ToList();
 
@@ -107,6 +107,7 @@ internal class Captain : RoleBase
             if (role == CustomRoles.Cleansed ||
                 role == CustomRoles.LastImpostor ||
                 role == CustomRoles.Lovers || // Causes issues involving Lovers Suicide
+                role == CustomRoles.Bloodthirst ||
                 role.IsBetrayalAddon())
             {
                 Logger.Info($"Removed {role} from list of addons", "Captain");
