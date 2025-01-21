@@ -506,7 +506,8 @@ public static class Options
     public static OptionItem ImpsCanSeeEachOthersRoles;
     public static OptionItem ImpsCanSeeEachOthersAddOns;
 
-    //public static OptionItem MadmateCanFixSabotage;
+    public static OptionItem MadmateRolesMinPlayer;
+    public static OptionItem MadmateRolesMaxPlayer;
     public static OptionItem DefaultShapeshiftCooldown;
     public static OptionItem DeadImpCantSabotage;
 
@@ -696,9 +697,6 @@ public static class Options
 
         Madmate.SetupMenuOptions();
 
-        //MadmateCanFixSabotage = BooleanOptionItem.Create(50010, "MadmateCanFixSabotage", false, TabGroup.ImpostorRoles, false)
-        //.SetGameMode(CustomGameMode.Standard);
-
         DefaultShapeshiftCooldown = FloatOptionItem.Create(60011, "DefaultShapeshiftCooldown", new(5f, 180f, 5f), 15f, TabGroup.ImpostorRoles, false)
             .SetGameMode(CustomGameMode.Standard)
             .SetHeader(true)
@@ -832,6 +830,14 @@ public static class Options
         TextOptionItem.Create(10000005, "RoleType.Madmate", TabGroup.ImpostorRoles)
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(255, 25, 25, byte.MaxValue));
+
+        MadmateRolesMinPlayer = IntegerOptionItem.Create(60034, "MadmateRolesMinPlayer", new(0, 15, 1), 0, TabGroup.ImpostorRoles, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetHeader(true)
+            .SetValueFormat(OptionFormat.Players);
+        MadmateRolesMaxPlayer = IntegerOptionItem.Create(60035, "MadmateRolesMaxPlayer", new(0, 15, 1), 0, TabGroup.ImpostorRoles, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetValueFormat(OptionFormat.Players);
 
         CustomRoleManager.GetNormalOptions(Custom_RoleType.Madmate).ForEach(r => r.SetupCustomOption());
 
