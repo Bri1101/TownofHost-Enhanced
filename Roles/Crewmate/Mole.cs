@@ -44,7 +44,7 @@ internal class Mole : RoleBase
     {
         if (pc.Is(CustomRoles.Bloodthirst)) return;
 
-        float delay = Utils.GetActiveMapId() != 5 ? 0.1f : 0.4f;
+        float delay = 0.5f;
 
         _ = new LateTask(() =>
         {
