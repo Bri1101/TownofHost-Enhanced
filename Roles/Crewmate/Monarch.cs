@@ -37,6 +37,9 @@ internal class Monarch : RoleBase
     public override void Add(byte playerId)
     {
         AbilityLimit = KnightMax.GetInt();
+
+        if (playerId.GetPlayer().Is(CustomRoles.Bloodthirst))
+            playerId.GetPlayer().AddDoubleTrigger();
     }
     public override void ApplyGameOptions(IGameOptions opt, byte playerId) => opt.SetVision(false);
     public override void SetKillCooldown(byte id) => Main.AllPlayerKillCooldown[id] = AbilityLimit > 0 ? KnightCooldown.GetFloat() : 300f;

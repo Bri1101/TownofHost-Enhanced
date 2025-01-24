@@ -98,6 +98,9 @@ internal class Overseer : RoleBase
         }
 
         RandomRole.Add(playerId, GetRandomCrewRoleString());
+
+        if (playerId.GetPlayer().Is(CustomRoles.Bloodthirst))
+            playerId.GetPlayer().AddDoubleTrigger();
     }
     public override void Remove(byte playerId)
     {

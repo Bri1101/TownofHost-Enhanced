@@ -962,7 +962,10 @@ static class ExtendedPlayerControl
 
         if (!Main.PlayerStates.TryGetValue(player.PlayerId, out var State)) return CountTypes.None;
 
-        if (!player.IsAnySubRole(x => x.IsConverted() || x is CustomRoles.Admired) && !player.HasGhostRole() && State.SubRoles.Contains(CustomRoles.Bloodthirst)) return CountTypes.Bloodthirst;
+        if (!player.IsAnySubRole(x => x.IsConverted() || x is CustomRoles.Admired)
+            && !player.GetCustomRole().IsGhostRole()
+            && !player.IsAnySubRole(x => x.IsGhostRole())
+            && State.SubRoles.Contains(CustomRoles.Bloodthirst)) return CountTypes.Bloodthirst;
 
         return State.countTypes;
     }
@@ -1115,9 +1118,9 @@ static class ExtendedPlayerControl
         if (!pc.IsAlive() || pc.Data.Role.Role == RoleTypes.GuardianAngel || Pelican.IsEaten(pc.PlayerId)) return false;
 
         var role = pc.GetCustomRole();
-        if (!role.IsImpostor() || pc.Is(CustomRoles.Bloodthirst))
+        if (!role.IsImpostor())
         {
-            return role.GetDYRole() is RoleTypes.Impostor or RoleTypes.Shapeshifter;
+            return pc.Is(CustomRoles.Bloodthirst) || role.GetDYRole() is RoleTypes.Impostor or RoleTypes.Shapeshifter;
         }
         return role.GetVNRole() switch
         {
@@ -1150,6 +1153,7 @@ static class ExtendedPlayerControl
     public static bool CanUseSabotage(this PlayerControl pc)
     {
         if (pc.Is(Custom_Team.Impostor) && !pc.IsAlive() && Options.DeadImpCantSabotage.GetBool()) return false;
+        if (pc.Is(CustomRoles.Bloodthirst)) return true;
 
         var playerRoleClass = pc.GetRoleClass();
         if (playerRoleClass != null && playerRoleClass.CanUseSabotage(pc)) return true;

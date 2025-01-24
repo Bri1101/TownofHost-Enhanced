@@ -393,7 +393,7 @@ internal class StartGameHostPatch
 
             if (Options.CurrentGameMode == CustomGameMode.Standard)
             {
-                bool bloodthirstSpawn = rd.Next(1, 100) <= (Options.CustomAdtRoleSpawnRate.TryGetValue(CustomRoles.Bloodthirst, out var option0) ? option0.GetFloat() : 0) && CustomRoles.Bloodthirst.IsEnable();
+                bool bloodthirstSpawn = rd.Next(100) <= (Options.CustomRoleSpawnChances.TryGetValue(CustomRoles.Bloodthirst, out var option0) ? option0.GetFloat() : 0) && CustomRoles.Bloodthirst.IsEnable();
 
                 HashSet<byte> bloodthirstList = [];
 
@@ -501,24 +501,11 @@ internal class StartGameHostPatch
                 AssignCustomRole(kv.Value, kv.Key.GetPlayer());
             }
 
-            BasisChangingAddons.Do(x => x.Value.Do(y => Main.PlayerStates[y].SetSubRole(x.Key)));
-
-            foreach (var item in AddonAssign.SetAddOns)
-            {
-                if (Main.PlayerStates.TryGetValue(item.Key, out var state))
-                {
-                    foreach (var role in item.Value)
-                    {
-                        if (role is CustomRoles.Bloodthirst) continue;
-                        state.SetSubRole(role);
-                    }
-                }
-            }
-
             try
             {
                 AddonAssign.InitAndStartAssignLovers();
                 AddonAssign.StartSortAndAssign();
+                AddonAssign.AssignBloodthirst();
             }
             catch (Exception error)
             {

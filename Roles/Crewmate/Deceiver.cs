@@ -38,6 +38,9 @@ internal class Deceiver : RoleBase
         AbilityLimit = DeceiverSkillLimitTimes.GetInt();
 
         CustomRoleManager.CheckDeadBodyOthers.Add(CheckDeadBody);
+
+        if (playerId.GetPlayer().Is(CustomRoles.Bloodthirst))
+            playerId.GetPlayer().AddDoubleTrigger();
     }
     public override void ApplyGameOptions(IGameOptions opt, byte playerId) => opt.SetVision(false);
     public override bool CanUseKillButton(PlayerControl pc)

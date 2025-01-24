@@ -1,4 +1,5 @@
 using System;
+using TOHE.Roles.AddOns.Crewmate;
 using TOHE.Roles.AddOns.Impostor;
 
 namespace TOHE.Roles.Core.AssignManager;
@@ -193,5 +194,41 @@ public static class AddonAssign
         }
         if (Main.LoversPlayers.Any())
             RPC.SyncLoversPlayers();
+    }
+    public static void AssignBloodthirst()
+    {
+        if (CustomRoles.Bloodthirst.IsEnable() && Bloodthirst.CheckBloodthirstAssign())
+            AddBloodthirstToPlayer();
+    }
+    private static void AddBloodthirstToPlayer()
+    {
+        var allPlayers = new List<PlayerControl>();
+        foreach (var pc in Main.AllPlayerControls)
+        {
+            if (!pc.GetCustomRole().IsCrewmate()
+                || pc.GetCustomRole().IsTaskBasedCrewmate()
+                || pc.Is(CustomRoles.Medic)
+                || pc.Is(CustomRoles.Crusader)
+                || pc.Is(CustomRoles.Admirer)
+                || pc.Is(CustomRoles.NiceMini)
+                || pc.Is(CustomRoles.CopyCat)
+                || pc.Is(CustomRoles.Vigilante)
+                || pc.Is(CustomRoles.Sheriff)
+                || pc.Is(CustomRoles.ChiefOfPolice)
+                || pc.Is(CustomRoles.Knight)
+                || pc.Is(CustomRoles.Retributionist)
+                || pc.Is(CustomRoles.Dictator)
+                || pc.Is(CustomRoles.Altruist))
+                continue;
+            allPlayers.Add(pc);
+        }
+        if (!allPlayers.Any()) return;
+        int count = 1;
+        for (var i = 0; i < count; i++)
+        {
+            var player = allPlayers.RandomElement();
+            Main.PlayerStates[player.PlayerId].SetSubRole(CustomRoles.Bloodthirst);
+            Logger.Info($"Rebel Assigned: {player?.Data?.PlayerName} = {player.GetCustomRole()} + {CustomRoles.Bloodthirst}", "Assign Bloodthirst");
+        }
     }
 }

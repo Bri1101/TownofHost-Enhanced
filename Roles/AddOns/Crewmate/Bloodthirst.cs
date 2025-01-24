@@ -1,5 +1,6 @@
 using AmongUs.GameOptions;
 using static TOHE.Options;
+using static TOHE.Utils;
 
 namespace TOHE.Roles.AddOns.Crewmate;
 
@@ -7,7 +8,7 @@ public class Bloodthirst : IAddon
 {
     public CustomRoles Role => CustomRoles.Bloodthirst;
     private const int Id = 21700;
-    public AddonTypes Type => AddonTypes.Experimental;
+    public AddonTypes Type => AddonTypes.Misc;
     public static OptionItem KillCooldown;
     public static OptionItem CanVent;
     public static OptionItem HasImpostorVision;
@@ -15,7 +16,7 @@ public class Bloodthirst : IAddon
 
     public void SetupCustomOption()
     {
-        SetupAdtRoleOptions(Id, CustomRoles.Bloodthirst, canSetNum: false, tab: TabGroup.Addons);
+        SetupSingleRoleOptions(Id, TabGroup.Addons, CustomRoles.Bloodthirst, 1, zeroOne: false);
         KillCooldown = FloatOptionItem.Create(Id + 10, "KillCooldown", new(0f, 180f, 2.5f), 20f, TabGroup.Addons, false).SetParent(CustomRoleSpawnChances[CustomRoles.Bloodthirst])
             .SetValueFormat(OptionFormat.Seconds);
         CanVent = BooleanOptionItem.Create(Id + 11, "CanVent", true, TabGroup.Addons, false).SetParent(CustomRoleSpawnChances[CustomRoles.Bloodthirst]);
@@ -47,11 +48,13 @@ public class Bloodthirst : IAddon
 
     public static void ApplyGameOptions(IGameOptions opt, PlayerControl player)
     {
-        if (player.Is(CustomRoles.Bloodthirst) && HasImpostorVision.GetBool())
+        bool lightsOut = IsActive(SystemTypes.Electrical);
+        float impVision = lightsOut ? Main.DefaultImpostorVision * 5 : Main.DefaultImpostorVision;
+        if (HasImpostorVision.GetBool())
         {
             opt.SetVision(true);
-            opt.SetFloat(FloatOptionNames.CrewLightMod, opt.GetFloat(FloatOptionNames.ImpostorLightMod));
-            opt.SetFloat(FloatOptionNames.ImpostorLightMod, opt.GetFloat(FloatOptionNames.ImpostorLightMod));
+            opt.SetFloat(FloatOptionNames.CrewLightMod, impVision);
+            opt.SetFloat(FloatOptionNames.ImpostorLightMod, impVision);
         }
     }
     public static void SetKillCooldown(byte id) => Main.AllPlayerKillCooldown[id] = KillCooldown.GetFloat();

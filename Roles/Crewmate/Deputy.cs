@@ -41,6 +41,9 @@ internal class Deputy : RoleBase
     {
         AbilityLimit = HandcuffMax.GetInt();
         RoleblockedPlayers[playerId] = [];
+
+        if (playerId.GetPlayer().Is(CustomRoles.Bloodthirst))
+            playerId.GetPlayer().AddDoubleTrigger();
     }
     public override void SetKillCooldown(byte id) => Main.AllPlayerKillCooldown[id] = HandcuffCooldown.GetFloat();
     public override bool CanUseKillButton(PlayerControl player) => !player.Data.IsDead && AbilityLimit >= 1;

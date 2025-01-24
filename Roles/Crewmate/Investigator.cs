@@ -46,6 +46,9 @@ internal class Investigator : RoleBase
         MaxInvestigateLimit[playerId] = InvestigateMax.GetInt();
         RoundInvestigateLimit[playerId] = InvestigateRoundMax.GetInt();
         InvestigatedList[playerId] = [];
+
+        if (playerId.GetPlayer().Is(CustomRoles.Bloodthirst))
+            playerId.GetPlayer().AddDoubleTrigger();
     }
     public override void Remove(byte playerId)
     {

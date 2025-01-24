@@ -63,6 +63,9 @@ internal class Jailer : RoleBase
         JailerTarget[playerId] = byte.MaxValue;
         JailerHasExe.Add(playerId, false);
         JailerDidVote.Add(playerId, false);
+
+        if (playerId.GetPlayer().Is(CustomRoles.Bloodthirst))
+            playerId.GetPlayer().AddDoubleTrigger();
     }
     public override void Remove(byte playerId)
     {

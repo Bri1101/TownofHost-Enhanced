@@ -672,21 +672,6 @@ public static class CustomRolesHelper
                     return false;
                 break;
 
-            case CustomRoles.Bloodthirst:
-                if (pc.Is(CustomRoles.Medic)
-                    || pc.Is(CustomRoles.Crusader)
-                    || pc.Is(CustomRoles.Sheriff)
-                    || pc.Is(CustomRoles.Admirer)
-                    || pc.Is(CustomRoles.NiceMini)
-                    || pc.Is(CustomRoles.Bodyguard)
-                    || pc.Is(CustomRoles.Vigilante)
-                    || pc.Is(CustomRoles.Knight)
-                    || pc.Is(CustomRoles.ChiefOfPolice))
-                    return false;
-                if (!pc.GetCustomRole().IsCrewmate() || pc.GetCustomRole().IsTaskBasedCrewmate())
-                    return false;
-                break;
-
             case CustomRoles.Torch:
                 if (pc.Is(CustomRoles.Bewilder)
                     || pc.Is(CustomRoles.Lighter)

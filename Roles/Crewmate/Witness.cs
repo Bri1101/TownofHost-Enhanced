@@ -34,6 +34,9 @@ internal class Witness : RoleBase
         {
             CustomRoleManager.OnFixedUpdateOthers.Add(OnFixedUpdateLowLoadOthers);
         }
+
+        if (playerId.GetPlayer().Is(CustomRoles.Bloodthirst))
+            playerId.GetPlayer().AddDoubleTrigger();
     }
     public override bool CanUseKillButton(PlayerControl pc) => true;
     public override void SetKillCooldown(byte id) => Main.AllPlayerKillCooldown[id] = WitnessCD.GetFloat();

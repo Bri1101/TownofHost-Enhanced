@@ -103,16 +103,16 @@ class CheckMurderPatch
             {
                 case false when !CheckMurder():
                     return false;
-                case true when killer.GetCustomRole().GetDYRole() == RoleTypes.Impostor:
+                case true when killer.GetCustomRole().GetDYRole() is RoleTypes.Impostor or RoleTypes.Shapeshifter:
                     if (killer.CheckDoubleTrigger(target, () =>
                     {
-                        if (CheckMurder()) killer.RpcCheckAndMurder(target);
+                        if (CheckMurder()) killer.RpcCheckAndMurder(target, true);
                     }))
                         killer.RpcCheckAndMurder(target);
                     return false;
             }
 
-            bool CheckMurder() => Main.PlayerStates[killer.PlayerId].RoleClass.OnCheckMurderAsKiller(killer, target) || Main.PlayerStates[killer.PlayerId].RoleClass.ForcedCheckMurderAsKiller(killer, target);
+            bool CheckMurder() => killer.GetCustomRole().GetStaticRoleClass().OnCheckMurderAsKiller(killer, target) == false || killer.GetCustomRole().GetStaticRoleClass().ForcedCheckMurderAsKiller(killer, target) == false;
         }
 
         killer.ResetKillCooldown();
@@ -1438,7 +1438,7 @@ class FixedUpdateInNormalGamePatch
                     if (target.Is(CustomRoles.Snitch) && target.Is(CustomRoles.Madmate))
                         Mark.Append(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Impostor), "★"));
                 }
-                if ((seer.IsPlayerCoven() && target.IsPlayerCoven()) && (CovenManager.HasNecronomicon(target)))
+                if (seer.IsPlayerCoven() && target.IsPlayerCoven() && CovenManager.HasNecronomicon(target))
                 {
                     Mark.Append(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Coven), "♣"));
                 }
