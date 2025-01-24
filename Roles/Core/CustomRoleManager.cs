@@ -167,7 +167,7 @@ public static class CustomRoleManager
                         Mare.ApplyGameOptions(player.PlayerId);
                         break;
                     case CustomRoles.Bloodthirst:
-                        Madmate.ApplyGameOptions(opt);
+                        Bloodthirst.ApplyGameOptions(opt, player);
                         break;
                 }
             }

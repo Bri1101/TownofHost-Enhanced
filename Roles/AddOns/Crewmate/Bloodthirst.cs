@@ -45,9 +45,8 @@ public class Bloodthirst : IAddon
         => CheckBloodthirstAssign() ? 0 : 1;
     ///-------------------------------------------------------------------------------------------------///
 
-    public static void ApplyGameOptions(IGameOptions opt, byte playerId)
+    public static void ApplyGameOptions(IGameOptions opt, PlayerControl player)
     {
-        var player = playerId.GetPlayer();
         if (player.Is(CustomRoles.Bloodthirst) && HasImpostorVision.GetBool())
         {
             opt.SetVision(true);
