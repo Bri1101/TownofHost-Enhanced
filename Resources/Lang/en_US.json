@@ -1488,8 +1488,7 @@
 
   "BombCooldown": "Bomb Cooldown",
   "Warlock_CanKillSelf": "Can Kill Themselves",
-  "CrewpostorKnowsAllies": "Knows <color=#ff1919>Impostors</color>",
-  "AlliesKnowCrewpostor": "Known to <color=#ff1919>Impostors</color>",
+  "CPAndAlliesKnowEachOther": "Crewpostor And <color=#ff1919>Impostors</color> know each other",
   "CrewpostorLungeKill": "Crewpostor lunges on kill",
   "CrewpostorKillAfterTask": "Number of tasks completed to make one kill",
 
