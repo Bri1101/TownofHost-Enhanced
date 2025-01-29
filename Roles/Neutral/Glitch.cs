@@ -62,7 +62,6 @@ internal class Glitch : RoleBase
         KCDTimer = 10;
 
         NotSetCD = false;
-        IsShifted = false;
 
         var ts = GetTimeStamp();
 
