@@ -847,11 +847,11 @@ public static class Options
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(255, 25, 25, byte.MaxValue));
 
-        MadmateRolesMinPlayer = IntegerOptionItem.Create(60034, "MadmateRolesMinPlayer", new(0, 15, 1), 0, TabGroup.ImpostorRoles, false)
+        MadmateRolesMinPlayer = IntegerOptionItem.Create(60035, "MadmateRolesMinPlayer", new(0, 15, 1), 0, TabGroup.ImpostorRoles, false)
             .SetGameMode(CustomGameMode.Standard)
             .SetHeader(true)
             .SetValueFormat(OptionFormat.Players);
-        MadmateRolesMaxPlayer = IntegerOptionItem.Create(60035, "MadmateRolesMaxPlayer", new(0, 15, 1), 0, TabGroup.ImpostorRoles, false)
+        MadmateRolesMaxPlayer = IntegerOptionItem.Create(60036, "MadmateRolesMaxPlayer", new(0, 15, 1), 0, TabGroup.ImpostorRoles, false)
             .SetGameMode(CustomGameMode.Standard)
             .SetValueFormat(OptionFormat.Players);
 
