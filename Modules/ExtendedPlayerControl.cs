@@ -760,8 +760,6 @@ static class ExtendedPlayerControl
         if (target.GetRoleClass() is Glitch gc)
         {
             gc.LastHack = Utils.GetTimeStamp();
-            gc.LastMimic = Utils.GetTimeStamp();
-            gc.MimicCDTimer = 10;
             gc.HackCDTimer = 10;
         }
         else if (PlayerControl.LocalPlayer.PlayerId == target.PlayerId)

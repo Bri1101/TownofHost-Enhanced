@@ -319,12 +319,6 @@ public class SabotageSystemPatch
                     return false;
             }
 
-            if (player.GetRoleClass() is Glitch gc)
-            {
-                gc.Mimic(player);
-                return false;
-            }
-
             return player.CanUseSabotage();
         }
 
