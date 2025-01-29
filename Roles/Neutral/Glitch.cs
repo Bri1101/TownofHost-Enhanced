@@ -37,12 +37,10 @@ internal class Glitch : RoleBase
     public long LastKill;
 
     public bool NotSetCD = false;
-    private bool IsShifted = false;
     private long LastRpcSend = 0;
 
     public override void SetupCustomOption()
     {
-        //GlitchÒü»1õ║║Õø║Õ«Ü
         SetupSingleRoleOptions(Id, TabGroup.NeutralRoles, CustomRoles.Glitch, 1, zeroOne: false);
         KillCooldown = FloatOptionItem.Create(Id + 10, GeneralOption.KillCooldown, new(0f, 180f, 1f), 20, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Glitch])
             .SetValueFormat(OptionFormat.Seconds);
