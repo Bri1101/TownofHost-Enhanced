@@ -65,7 +65,7 @@ static class ExtendedPlayerControl
 
         foreach (var addon in roles)
         {
-            if (!CustomRolesHelper.CheckAddonConfilct(addon, player))
+            if (!CustomRolesHelper.CheckAddonConfilct(addon, player, checkLimitAddons: false, checkSelfAddOn: false))
             {
                 Main.PlayerStates[player.PlayerId].RemoveSubRole(addon);
                 Logger.Info($"{player.GetNameWithRole()} had incompatible addon {addon.ToString()}, removing addon", $"{player.GetCustomRole().ToString()}");
@@ -382,7 +382,7 @@ static class ExtendedPlayerControl
         {
             Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
         }
-        HudManagerPatch.LastSetNameDesyncCount++;
+        HudManagerUpdatePatch.LastSetNameDesyncCount++;
 
         Logger.Info($"Set:{player?.Data?.PlayerName}:{name} for All", "RpcSetNameEx");
         player.RpcSetName(name);
@@ -401,7 +401,7 @@ static class ExtendedPlayerControl
             return;
         }
         Main.LastNotifyNames[(player.PlayerId, seer.PlayerId)] = name;
-        HudManagerPatch.LastSetNameDesyncCount++;
+        HudManagerUpdatePatch.LastSetNameDesyncCount++;
         Logger.Info($"Set:{player?.Data?.PlayerName}:{name} for {seer.GetNameWithRole().RemoveHtmlTags()}", "RpcSetNamePrivate");
 
         if (seer == null || player == null) return;
@@ -464,26 +464,16 @@ static class ExtendedPlayerControl
     /// <summary>
     /// ONLY to be used when killer surely may kill the target, please check with killer.RpcCheckAndMurder(target, check: true) for indirect kill.
     /// </summary>
-    public static void RpcMurderPlayer(this PlayerControl killer, PlayerControl target, bool error = false)
+    public static void RpcMurderPlayer(this PlayerControl killer, PlayerControl target)
     {
-        if (!error)
+        // If Target is Dollmaster or Possessed Player run Dollmasters kill check instead.
+        if (DollMaster.SwapPlayerInfo(target) != target)
         {
-            // If Target is Dollmaster or Possessed Player run Dollmasters kill check instead.
-            if (DollMaster.SwapPlayerInfo(target) != target)
-            {
-                DollMaster.CheckMurderAsPossessed(killer, target);
-                return;
-            }
+            DollMaster.CheckMurderAsPossessed(killer, target);
+            return;
+        }
 
-            killer.RpcMurderPlayer(target, true);
-        }
-        else
-        {
-            MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.Reliable, killer.OwnerId);
-            messageWriter.WriteNetObject(target);
-            messageWriter.Write((int)MurderResultFlags.FailedError);
-            AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
-        }
+        killer.RpcMurderPlayer(target, true);
     }
     public static void RpcGuardAndKill(this PlayerControl killer, PlayerControl target = null, bool forObserver = false, bool fromSetKCD = false)
     {
