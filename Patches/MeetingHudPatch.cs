@@ -453,7 +453,7 @@ class CheckForEndVotingPatch
         foreach (var pc in Main.AllAlivePlayerControls)
         {
             var pc_role = pc.GetCustomRole();
-            if (pc_role.IsImpostor() && pc != exiledPlayer.Object)
+            if (pc_role.IsImpostorTeamV3() && pc != exiledPlayer.Object)
                 impnum++;
             else if (pc_role.IsNK() && pc != exiledPlayer.Object)
                 neutralnum++;
@@ -468,13 +468,25 @@ class CheckForEndVotingPatch
                 name = string.Format(GetString("PlayerExiled"), realName);
                 break;
             case 1:
-                if (player.GetCustomRole().IsImpostor() || player.Is(CustomRoles.Parasite) || player.Is(CustomRoles.Crewpostor) || player.Is(CustomRoles.Refugee))
+                if (player.Is(CustomRoles.Madmate))
+                    name = string.Format(GetString("BelongTo"), realName, ColorString(GetRoleColor(CustomRoles.Impostor), GetString("TeamImpostor")));
+
+                else if (player.Is(CustomRoles.Admired))
+                    name = string.Format(GetString("IsGood"), realName);
+
+                else if (player.IsAnySubRole(x => x.IsConvertedV2()))
+                    name = string.Format(GetString("BelongTo"), realName, ColorString(new Color32(127, 140, 141, byte.MaxValue), GetString("TeamNeutral")));
+
+                else if (player.Is(CustomRoles.Enchanted))
+                    name = string.Format(GetString("BelongTo"), realName, ColorString(GetRoleColor(CustomRoles.Coven), GetString("TeamCoven")));
+
+                else if (player.GetCustomRole().IsImpostorTeamV3())
                     name = string.Format(GetString("BelongTo"), realName, ColorString(GetRoleColor(CustomRoles.Impostor), GetString("TeamImpostor")));
 
                 else if (player.GetCustomRole().IsCrewmate())
                     name = string.Format(GetString("IsGood"), realName);
 
-                else if (player.GetCustomRole().IsNeutral() && !player.Is(CustomRoles.Parasite) && !player.Is(CustomRoles.Refugee) && !player.Is(CustomRoles.Crewpostor))
+                else if (player.GetCustomRole().IsNeutralTeamV3())
                     name = string.Format(GetString("BelongTo"), realName, ColorString(new Color32(127, 140, 141, byte.MaxValue), GetString("TeamNeutral")));
 
                 else if (player.GetCustomRole().IsCoven())
@@ -486,13 +498,21 @@ class CheckForEndVotingPatch
                 if (Options.ShowTeamNextToRoleNameOnEject.GetBool())
                 {
                     name += " (";
-                    if (player.GetCustomRole().IsImpostor() || player.Is(CustomRoles.Madmate))
+                    if (player.Is(CustomRoles.Madmate))
                         name += ColorString(new Color32(255, 25, 25, byte.MaxValue), GetString("TeamImpostor"));
-                    else if (player.GetCustomRole().IsNeutral() || player.Is(CustomRoles.Charmed))
+                    else if (player.IsAnySubRole(x => x.IsConvertedV2()))
+                        name += ColorString(new Color32(127, 140, 141, byte.MaxValue), GetString("TeamNeutral"));
+                    else if (player.Is(CustomRoles.Admired))
+                        name += ColorString(new Color32(140, 255, 255, byte.MaxValue), GetString("TeamCrewmate"));
+                    else if (player.Is(CustomRoles.Enchanted))
+                        name += ColorString(new Color32(172, 66, 242, byte.MaxValue), GetString("TeamCoven"));
+                    else if (player.GetCustomRole().IsImpostorTeamV3())
+                        name += ColorString(new Color32(255, 25, 25, byte.MaxValue), GetString("TeamImpostor"));
+                    else if (player.GetCustomRole().IsNeutralTeamV3())
                         name += ColorString(new Color32(127, 140, 141, byte.MaxValue), GetString("TeamNeutral"));
                     else if (player.GetCustomRole().IsCrewmate())
                         name += ColorString(new Color32(140, 255, 255, byte.MaxValue), GetString("TeamCrewmate"));
-                    else if (player.GetCustomRole().IsCoven() || player.Is(CustomRoles.Enchanted))
+                    else if (player.GetCustomRole().IsCoven())
                         name += ColorString(new Color32(172, 66, 242, byte.MaxValue), GetString("TeamCoven"));
                     name += ")";
                 }
@@ -995,8 +1015,8 @@ class MeetingHudStartPatch
 
             foreach (var csId in Cyber.CyberDead)
             {
-                if (!Cyber.ImpKnowCyberDead.GetBool() && pc.GetCustomRole().IsImpostor()) continue;
-                if (!Cyber.NeutralKnowCyberDead.GetBool() && pc.GetCustomRole().IsNeutral()) continue;
+                if (!Cyber.ImpKnowCyberDead.GetBool() && pc.GetCustomRole().IsImpostorTeamV3()) continue;
+                if (!Cyber.NeutralKnowCyberDead.GetBool() && pc.GetCustomRole().IsNeutralTeamV3()) continue;
                 if (!Cyber.CrewKnowCyberDead.GetBool() && pc.GetCustomRole().IsCrewmate()) continue;
                 if (!Cyber.CovenKnowCyberDead.GetBool() && pc.GetCustomRole().IsCoven()) continue;
 

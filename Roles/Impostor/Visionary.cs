@@ -26,9 +26,7 @@ internal class Visionary : RoleBase
                 or CustomRoles.Infected
                 or CustomRoles.Contagious
                 or CustomRoles.Egoist
-                or CustomRoles.Recruit
-                or CustomRoles.Soulless
-                or CustomRoles.Admired)
+                or CustomRoles.Recruit)
                 return Main.roleColors[CustomRoles.Knight];
         }
 
@@ -37,12 +35,12 @@ internal class Visionary : RoleBase
             return Main.roleColors[CustomRoles.Coven];
         }
 
-        if (customRole.IsImpostorTeamV2() || customRole.IsMadmate())
+        if (customRole.IsImpostorTeamV2() || target.IsAnySubRole(SubRole => SubRole.IsImpostorTeamV2()))
         {
             return Main.roleColors[CustomRoles.Impostor];
         }
 
-        if (customRole.IsCrewmate())
+        if (customRole.IsCrewmateTeamV2() || target.Is(CustomRoles.Admired) || target.IsAnySubRole(SubRole => SubRole.IsCrewmateTeamV2()))
         {
             return Main.roleColors[CustomRoles.Bait];
         }

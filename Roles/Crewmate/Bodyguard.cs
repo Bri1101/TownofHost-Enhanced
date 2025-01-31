@@ -40,7 +40,7 @@ internal class Bodyguard : RoleBase
         var dis = Utils.GetDistance(pos, bodyguard.transform.position);
         if (dis > ProtectRadiusOpt.GetFloat()) return false;
 
-        if (bodyguard.Is(CustomRoles.Madmate) && killer.GetCustomRole().IsImpostorTeam())
+        if (bodyguard.Is(CustomRoles.Madmate) && killer.GetCustomRole().IsImpostorTeamV3())
         {
             Logger.Info($"{bodyguard.GetRealName()} He was a impostor, so he chose to ignore the murder scene", "Bodyguard");
         }

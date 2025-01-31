@@ -2550,6 +2550,8 @@
   "MerchantSellHelpfulToCrew": "Can sell <color=#8cffff>Helpful</color> Add-ons only to <color=#8cffff>Crewmates</color>",
   "MerchantSellOnlyEnabledAddons": "Can sell only enabled Add-ons",
 
+  "ScammerToRefugeeMsg": "All Impostors died. Your role has now been changed to {0}.",
+
   "ScammerCanAffectNeutral": "Can sell to <color=#7f8c8d>Neutrals</color>",
   "ScammerCanAffectCoven": "Can sell to <color=#ac42f2>Coven</color>",
   "ScammerCanSellHelpfulAddonToImpostor": "Can sell <color=#8cffff>Helpful</color> Add-ons to Impostors",

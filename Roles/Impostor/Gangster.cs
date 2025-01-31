@@ -79,58 +79,42 @@ internal class Gangster : RoleBase
 
         if (CanRecruit(killer.PlayerId))
         {
-            if (!killer.Is(CustomRoles.Admired) && !killer.Is(CustomRoles.Recruit) && !killer.Is(CustomRoles.Charmed)
-                && !killer.Is(CustomRoles.Infected) && !killer.Is(CustomRoles.Contagious) && !killer.Is(CustomRoles.Enchanted) && target.CanBeMadmate(forGangster: true)
-               && CanBeGansterRecruit(target))
+            if (!killer.GetCustomSubRoles().Find(x => x.IsBetrayalAddonV2(), out var convertedAddon) && target.CanBeMadmate(forGangster: true) && CanBeGansterRecruit(target))
             {
-                Logger.Info("Set converted: " + target.GetNameWithRole().RemoveHtmlTags() + " to " + CustomRoles.Madmate.ToString(), "Ganster Assign");
-                target.RpcSetCustomRole(CustomRoles.Madmate);
-                killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Madmate), GetString("GangsterSuccessfullyRecruited")));
-                target.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Madmate), GetString("BeRecruitedByGangster")));
+                convertedAddon = CustomRoles.Madmate;
             }
-            else if (killer.Is(CustomRoles.Admired) && Admirer.CanBeAdmired(target, killer))
+            else if (killer.IsAnySubRole(x => x.IsBetrayalAddonV2()))
             {
-                Logger.Info("Set converted: " + target.GetNameWithRole().RemoveHtmlTags() + " to " + CustomRoles.Admired.ToString(), "Ganster Assign");
-                target.RpcSetCustomRole(CustomRoles.Admired);
-                killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Admired), GetString("GangsterSuccessfullyRecruited")));
-                target.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Admired), GetString("BeRecruitedByGangster")));
-                Admirer.AdmiredList[killer.PlayerId].Add(target.PlayerId);
-                Admirer.SendRPC(killer.PlayerId, target.PlayerId);
-            }
-            else if (killer.Is(CustomRoles.Enchanted) && Ritualist.CanBeConverted(target))
-            {
-                Logger.Info("Set converted: " + target.GetNameWithRole().RemoveHtmlTags() + " to " + CustomRoles.Enchanted.ToString(), "Gangster Assign");
-                target.RpcSetCustomRole(CustomRoles.Enchanted);
-                killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Enchanted), GetString("GangsterSuccessfullyRecruited")));
-                target.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Enchanted), GetString("BeRecruitedByGangster")));
-            }
-            else if (killer.Is(CustomRoles.Recruit) && Jackal.CanBeSidekick(target))
-            {
-                Logger.Info("Set converted: " + target.GetNameWithRole().RemoveHtmlTags() + " to " + CustomRoles.Recruit.ToString(), "Ganster Assign");
-                target.RpcSetCustomRole(CustomRoles.Recruit);
-                killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Recruit), GetString("GangsterSuccessfullyRecruited")));
-                target.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Recruit), GetString("BeRecruitedByGangster")));
-            }
-            else if (killer.Is(CustomRoles.Charmed) && Cultist.CanBeCharmed(target))
-            {
-                Logger.Info("Set converted: " + target.GetNameWithRole().RemoveHtmlTags() + " to " + CustomRoles.Charmed.ToString(), "Ganster Assign");
-                target.RpcSetCustomRole(CustomRoles.Charmed);
-                killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Charmed), GetString("GangsterSuccessfullyRecruited")));
-                target.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Charmed), GetString("BeRecruitedByGangster")));
-            }
-            else if (killer.Is(CustomRoles.Infected) && Infectious.CanBeBitten(target))
-            {
-                Logger.Info("Set converted: " + target.GetNameWithRole().RemoveHtmlTags() + " to " + CustomRoles.Infected.ToString(), "Ganster Assign");
-                target.RpcSetCustomRole(CustomRoles.Infected);
-                killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Infected), GetString("GangsterSuccessfullyRecruited")));
-                target.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Infected), GetString("BeRecruitedByGangster")));
-            }
-            else if (killer.Is(CustomRoles.Contagious) && target.CanBeInfected())
-            {
-                Logger.Info("Set converted: " + target.GetNameWithRole().RemoveHtmlTags() + " to " + CustomRoles.Contagious.ToString(), "Ganster Assign");
-                target.RpcSetCustomRole(CustomRoles.Contagious);
-                killer.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Contagious), GetString("GangsterSuccessfullyRecruited")));
-                target.Notify(Utils.ColorString(Utils.GetRoleColor(CustomRoles.Contagious), GetString("BeRecruitedByGangster")));
+                foreach (var subRole in killer.GetCustomSubRoles().Where(x => x.IsBetrayalAddonV2()))
+                {
+                    switch (subRole)
+                    {
+                        case CustomRoles.Admired when Admirer.CanBeAdmired(target, killer):
+                            convertedAddon = CustomRoles.Admired;
+                            Admirer.AdmiredList[killer.PlayerId].Add(target.PlayerId);
+                            Admirer.SendRPC(killer.PlayerId, target.PlayerId);
+                            break;
+                        case CustomRoles.Enchanted when Ritualist.CanBeConverted(target):
+                            convertedAddon = CustomRoles.Enchanted;
+                            break;
+                        case CustomRoles.Recruit when Jackal.CanBeSidekick(target):
+                            convertedAddon = CustomRoles.Recruit;
+                            break;
+                        case CustomRoles.Charmed when Cultist.CanBeCharmed(target):
+                            convertedAddon = CustomRoles.Charmed;
+                            break;
+                        case CustomRoles.Infected when Infectious.CanBeBitten(target):
+                            convertedAddon = CustomRoles.Infected;
+                            break;
+                        case CustomRoles.Contagious when target.CanBeInfected():
+                            convertedAddon = CustomRoles.Contagious;
+                            break;
+                    }
+                }
+                Logger.Info("Set converted: " + target.GetNameWithRole().RemoveHtmlTags() + " to " + convertedAddon.ToString(), "Gangster Assign");
+                target.RpcSetCustomRole(convertedAddon);
+                killer.Notify(Utils.ColorString(Utils.GetRoleColor(convertedAddon), GetString("GangsterSuccessfullyRecruited")));
+                target.Notify(Utils.ColorString(Utils.GetRoleColor(convertedAddon), GetString("BeRecruitedByGangster")));
             }
             else goto GangsterFailed;
 

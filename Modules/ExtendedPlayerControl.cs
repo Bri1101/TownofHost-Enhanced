@@ -1366,7 +1366,6 @@ static class ExtendedPlayerControl
         else if (Options.ApocCanSeeEachOthersAddOns.GetBool() && seer.IsNeutralApocalypse() && target.IsNeutralApocalypse() && !subRole.IsBetrayalAddon()) return true;
 
         else if ((subRole is CustomRoles.Madmate
-                or CustomRoles.Sidekick
                 or CustomRoles.Recruit
                 or CustomRoles.Admired
                 or CustomRoles.Charmed
@@ -1392,8 +1391,6 @@ static class ExtendedPlayerControl
     }
     public static bool KnowSubRoleTarget(PlayerControl seer, PlayerControl target)
     {
-        //if (seer.GetRoleClass().KnowRoleTarget(seer, target)) return true;
-
         if (seer.CheckMMCanSeeImp())
         {
             // Imp know Madmate

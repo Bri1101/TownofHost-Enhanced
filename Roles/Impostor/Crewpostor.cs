@@ -1,6 +1,8 @@
 using AmongUs.GameOptions;
 using Hazel;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using TOHE.Roles.AddOns.Impostor;
+using TOHE.Roles.Neutral;
 using static TOHE.Options;
 
 namespace TOHE.Roles.Impostor;
@@ -80,6 +82,7 @@ internal class Crewpostor : RoleBase
 
     public override void ApplyGameOptions(IGameOptions opt, byte playerId)
     {
+        opt.SetVision(true);
         AURoleOptions.EngineerCooldown = 0f;
         AURoleOptions.EngineerInVentMaxTime = 0f;
     }
@@ -100,7 +103,8 @@ internal class Crewpostor : RoleBase
             Main.AllAlivePlayerControls.Where(x =>
                 x.PlayerId != player.PlayerId
                 && !(x.GetCustomRole() is CustomRoles.NiceMini or CustomRoles.EvilMini or CustomRoles.Solsticer)
-                && (CPAndAlliesKnowEachOther.GetBool() || !(x.CheckMMCanSeeImp() || (x.Is(CustomRoles.Madmate) && !Madmate.ImpCanKillMadmate.GetBool())))).ToList();
+                && (CPAndAlliesKnowEachOther.GetBool() || !(x.CheckMMCanSeeImp() || (x.Is(CustomRoles.Madmate) && !Madmate.ImpCanKillMadmate.GetBool())))
+                && !(x.Is(CustomRoles.Lawyer) && Lawyer.TargetList.Contains(player.PlayerId) && Lawyer.TargetKnowLawyer)).ToList();
 
         if (!list.Any())
         {
@@ -148,5 +152,19 @@ internal class Crewpostor : RoleBase
         }
 
         return true;
+    }
+    public override void AfterMeetingTasks()
+    {
+        foreach (var id in _playerIdList)
+        {
+            var cp = id.GetPlayer();
+            if (cp.IsAlive())
+            {
+                TaskState taskState = cp.GetPlayerTaskState();
+                cp.Data.RpcSetTasks(new Il2CppStructArray<byte>(0));
+                taskState.CompletedTasksCount = 0;
+                taskState.AllTasksCount = cp.Data.Tasks.Count;
+            }
+        }
     }
 }

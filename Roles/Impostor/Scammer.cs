@@ -1,5 +1,8 @@
-﻿using AmongUs.GameOptions;
+using AmongUs.GameOptions;
+using MS.Internal.Xml.XPath;
 using TOHE.Roles.AddOns;
+using TOHE.Roles.AddOns.Impostor;
+using TOHE.Roles.Core;
 using TOHE.Roles.Crewmate;
 using static TOHE.Options;
 using static TOHE.Translator;
@@ -101,5 +104,21 @@ internal class Scammer : RoleBase
         }
 
         return true;
+    }
+
+    public override void OnFixedUpdate(PlayerControl player, bool lowLoad, long nowTime)
+    {
+        if (lowLoad || !player.IsAlive() || Main.AliveImpostorCount >= 2) return;
+
+        if (LastImpostor.currentId == player.PlayerId && Main.AliveImpostorCount < 2)
+        {
+            player.GetRoleClass().OnRemove(player.PlayerId);
+            player.RpcChangeRoleBasis(CustomRoles.Refugee);
+            player.RpcSetCustomRole(CustomRoles.Refugee);
+            player.GetRoleClass().OnAdd(player.PlayerId);
+            player.SyncSettings();
+            player.SetKillCooldown();
+            player.Notify(string.Format(GetString("ScammerToRefugeeMsg"), CustomRoles.Refugee.ToString()));
+        }
     }
 }

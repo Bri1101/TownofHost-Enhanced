@@ -162,18 +162,18 @@ public class PlayerState(byte playerId)
             }
         }
 
-        if (role.IsConverted())
+        if (role.IsBetrayalAddonV2())
         {
-            SubRoles.RemoveAll(AddON => AddON != role && AddON.IsConverted());
+            SubRoles.RemoveAll(AddON => AddON != role && AddON.IsBetrayalAddonV2());
             SubRoles.Remove(CustomRoles.Rascal);
             SubRoles.Remove(CustomRoles.Loyal);
-            SubRoles.Remove(CustomRoles.Admired);
         }
 
         switch (role)
         {
             case CustomRoles.LastImpostor:
                 SubRoles.Remove(CustomRoles.Mare);
+                SubRoles.Remove(CustomRoles.Overclocked);
                 break;
 
             case CustomRoles.Madmate:
@@ -228,9 +228,6 @@ public class PlayerState(byte playerId)
 
             case CustomRoles.Admired:
                 countTypes = CountTypes.Crew;
-                SubRoles.RemoveAll(AddON => AddON != role && AddON.IsConverted());
-                SubRoles.Remove(CustomRoles.Rascal);
-                SubRoles.Remove(CustomRoles.Loyal);
                 break;
 
             case CustomRoles.Soulless:

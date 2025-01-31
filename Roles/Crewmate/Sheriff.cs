@@ -90,7 +90,7 @@ internal class Sheriff : RoleBase
     }
     private static void SetUpNeutralOptions(int Id)
     {
-        foreach (var neutral in CustomRolesHelper.AllRoles.Where(x => x.IsNeutral() && !x.IsTNA() && x is not CustomRoles.Glitch and not CustomRoles.Killer).ToArray())
+        foreach (var neutral in CustomRolesHelper.AllRoles.Where(x => x.IsNeutralTeamV3() && !x.IsTNA() && x is not CustomRoles.Glitch and not CustomRoles.Killer).ToArray())
         {
             SetUpKillTargetOption(neutral, Id, true, CanKillNeutralsMode);
             Id++;
@@ -121,7 +121,7 @@ internal class Sheriff : RoleBase
         if ((CanBeKilledBySheriff(target) && !(SetNonCrewCanKill.GetBool() && killer.IsNonCrewSheriff() || SidekickSheriffCanGoBerserk.GetBool() && killer.Is(CustomRoles.Recruit)))
             || (SidekickSheriffCanGoBerserk.GetBool() && killer.Is(CustomRoles.Recruit))
             || (SetNonCrewCanKill.GetBool() && killer.IsNonCrewSheriff()
-                 && ((target.GetCustomRole().IsImpostor() && NonCrewCanKillImp.GetBool()) || (target.GetCustomRole().IsCrewmate() && NonCrewCanKillCrew.GetBool()) || (target.GetCustomRole().IsNeutral() && NonCrewCanKillNeutral.GetBool()) || (target.GetCustomRole().IsCoven() && NonCrewCanKillCoven.GetBool())))
+                 && ((target.GetCustomRole().IsImpostorTeamV3() && NonCrewCanKillImp.GetBool()) || (target.GetCustomRole().IsCrewmate() && NonCrewCanKillCrew.GetBool()) || (target.GetCustomRole().IsNeutralTeamV3() && NonCrewCanKillNeutral.GetBool()) || (target.GetCustomRole().IsCoven() && NonCrewCanKillCoven.GetBool())))
             )
         {
             killer.ResetKillCooldown();
@@ -171,6 +171,7 @@ internal class Sheriff : RoleBase
         {
             CustomRoles.Trickster => false,
             var r when cRole.IsTNA() => false,
+            var r when cRole.IsMadmate() => CanKillAdmired,
             _ => cRole.GetCustomRoleTeam() switch
             {
                 Custom_Team.Impostor => CanKillAdmired,

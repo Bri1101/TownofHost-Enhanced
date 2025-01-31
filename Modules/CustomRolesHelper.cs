@@ -351,6 +351,13 @@ public static class CustomRolesHelper
             CustomRoles.Madmate or
             CustomRoles.Enchanted;
 
+    public static bool IsConvertedV2(this CustomRoles role) => (role is CustomRoles.Egoist && Egoist.EgoistCountAsConverted.GetBool())
+        || role is
+            CustomRoles.Charmed or
+            CustomRoles.Recruit or
+            CustomRoles.Infected or
+            CustomRoles.Contagious;
+
     public static bool IsNotKnightable(this CustomRoles role)
     {
         return role is

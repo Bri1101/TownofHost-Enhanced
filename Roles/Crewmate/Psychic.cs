@@ -77,7 +77,7 @@ internal class Psychic : RoleBase
     {
         if (target == null || seer == null) return false;
         var targetRole = target.GetCustomRole();
-        if (seer.Is(CustomRoles.Madmate)) return targetRole.IsNeutral() || targetRole.IsCrewKiller();
+        if (seer.Is(CustomRoles.Madmate)) return targetRole.IsNeutralTeamV3() || targetRole.IsCrewKiller();
         else return RedPlayer != null && RedPlayer.Contains(target.PlayerId);
     }
     public override void OnReportDeadBody(PlayerControl reported, NetworkedPlayerInfo target)
@@ -90,7 +90,7 @@ internal class Psychic : RoleBase
         if (!_Player.IsAlive() || !AmongUsClient.Instance.AmHost) return;
 
         List<PlayerControl> BadListPc = Main.AllAlivePlayerControls.Where(x => Illusionist.IsNonCovIllusioned(x.PlayerId) ||
-        (x.Is(Custom_Team.Impostor) && !x.Is(CustomRoles.Trickster) && !x.Is(CustomRoles.Admired)) ||
+        (x.GetCustomRole().IsImpostorTeamV3() && !x.Is(CustomRoles.Trickster) && !x.Is(CustomRoles.Admired)) ||
         x.IsAnySubRole(x => x.IsConverted()) ||
         (x.GetCustomRole().IsCrewKiller() && CkshowEvil.GetBool()) ||
         (x.GetCustomRole().IsNE() && NEshowEvil.GetBool()) ||

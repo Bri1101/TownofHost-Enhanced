@@ -240,8 +240,9 @@ internal class Inspector : RoleBase
                     if
                     (
                         (
-                        ((target1.IsPlayerCoven() || target1.Is(CustomRoles.Enchanted) || Illusionist.IsNonCovIllusioned(target1.PlayerId)))
-                        && (target2.IsPlayerCoven() || target2.Is(CustomRoles.Enchanted) || Illusionist.IsNonCovIllusioned(target2.PlayerId))
+                        (target1.IsPlayerCoven() || target1.Is(CustomRoles.Enchanted) || Illusionist.IsNonCovIllusioned(target1.PlayerId)) && !target1.Is(CustomRoles.Admired)
+                        &&
+                        (target2.IsPlayerCoven() || target2.Is(CustomRoles.Enchanted) || Illusionist.IsNonCovIllusioned(target2.PlayerId)) && !target2.Is(CustomRoles.Admired)
                         )
                         ||
                         (
@@ -253,7 +254,7 @@ internal class Inspector : RoleBase
                         (
                         (target1.GetCustomRole().IsImpostorTeamV2() || target1.IsAnySubRole(role => role.IsImpostorTeamV2())) && !target1.Is(CustomRoles.Admired)
                         &&
-                        (target2.GetCustomRole().IsImpostorTeamV2() || target2.IsAnySubRole(role => role.IsImpostorTeamV2()) && !target2.Is(CustomRoles.Admired))
+                        (target2.GetCustomRole().IsImpostorTeamV2() || target2.IsAnySubRole(role => role.IsImpostorTeamV2())) && !target2.Is(CustomRoles.Admired)
                         )
                         ||
                         (
@@ -308,7 +309,7 @@ internal class Inspector : RoleBase
                             if (target2.Is(CustomRoles.Admired)) roleT2 = "Crewmate";
                             else if (target2.GetCustomRole().IsImpostorTeamV2() || target2.IsAnySubRole(role => role.IsImpostorTeamV2())) roleT2 = "Impostor";
                             else if (target2.GetCustomRole().IsNeutralTeamV2() || target2.IsAnySubRole(role => role.IsNeutralTeamV2())) roleT2 = "Neutral";
-                            else if ((target2.GetCustomRole().IsCrewmateTeamV2() && (target2.GetCustomSubRoles().Any(role => role.IsCrewmateTeamV2()) || target2.GetCustomSubRoles().Count == 0))) roleT2 = "Crewmate";
+                            else if (target2.GetCustomRole().IsCrewmateTeamV2() && (target2.GetCustomSubRoles().Any(role => role.IsCrewmateTeamV2()) || (target2.GetCustomSubRoles().Count == 0))) roleT2 = "Crewmate";
 
                             _ = new LateTask(() =>
                             {

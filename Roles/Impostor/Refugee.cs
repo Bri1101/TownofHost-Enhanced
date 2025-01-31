@@ -1,4 +1,3 @@
-
 using AmongUs.GameOptions;
 
 namespace TOHE.Roles.Impostor;

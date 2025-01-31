@@ -247,7 +247,7 @@ class GameEndCheckerForNormal
                 // Egoist (Impostor)
                 if (WinnerTeam == CustomWinner.Impostor)
                 {
-                    var egoistImpArray = Main.AllAlivePlayerControls.Where(x => x != null && x.GetCustomRole().IsImpostor() && x.Is(CustomRoles.Egoist)).ToArray();
+                    var egoistImpArray = Main.AllAlivePlayerControls.Where(x => x != null && x.GetCustomRole().IsImpostorTeamV3() && x.Is(CustomRoles.Egoist)).ToArray();
 
                     if (egoistImpArray.Length > 0)
                     {
@@ -442,10 +442,10 @@ class GameEndCheckerForNormal
                 }
 
                 //Neutral Win Together
-                if (Options.NeutralWinTogether.GetBool() && !WinnerIds.Any(x => Utils.GetPlayerById(x) != null && (Utils.GetPlayerById(x).GetCustomRole().IsCrewmate() || Utils.GetPlayerById(x).GetCustomRole().IsImpostor() || Utils.GetPlayerById(x).GetCustomRole().IsCoven()) && !Main.PlayerStates[x].IsNecromancer))
+                if (Options.NeutralWinTogether.GetBool() && !WinnerIds.Any(x => Utils.GetPlayerById(x) != null && (Utils.GetPlayerById(x).GetCustomRole().IsCrewmate() || Utils.GetPlayerById(x).GetCustomRole().IsImpostorTeamV3() || Utils.GetPlayerById(x).GetCustomRole().IsCoven()) && !Main.PlayerStates[x].IsNecromancer))
                 {
                     foreach (var pc in Main.AllPlayerControls)
-                        if (pc.GetCustomRole().IsNeutral() && !WinnerIds.Contains(pc.PlayerId) && !WinnerRoles.Contains(pc.GetCustomRole()))
+                        if (pc.GetCustomRole().IsNeutralTeamV3() && !WinnerIds.Contains(pc.PlayerId) && !WinnerRoles.Contains(pc.GetCustomRole()))
                             WinnerIds.Add(pc.PlayerId);
                 }
                 else if (!Options.NeutralWinTogether.GetBool() && Options.NeutralRoleWinTogether.GetBool())
@@ -453,7 +453,7 @@ class GameEndCheckerForNormal
                     foreach (var id in WinnerIds)
                     {
                         var pc = Utils.GetPlayerById(id);
-                        if (pc == null || !pc.GetCustomRole().IsNeutral() || Main.PlayerStates[pc.PlayerId].IsNecromancer) continue;
+                        if (pc == null || !pc.GetCustomRole().IsNeutralTeamV3() || Main.PlayerStates[pc.PlayerId].IsNecromancer) continue;
 
                         foreach (var tar in Main.AllPlayerControls)
                             if (!WinnerIds.Contains(tar.PlayerId) && tar.GetCustomRole() == pc.GetCustomRole())

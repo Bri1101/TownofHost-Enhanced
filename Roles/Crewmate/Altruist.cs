@@ -113,7 +113,7 @@ internal class Altruist : RoleBase
                     var getAlert = false;
                     var getArrow = false;
 
-                    if (ImpostorsCanGetsAlert.GetBool() && pc.Is(Custom_Team.Impostor) && pc.PlayerId != RevivedPlayerId)
+                    if (ImpostorsCanGetsAlert.GetBool() && pc.GetCustomRole().IsImpostorTeamV3() && pc.PlayerId != RevivedPlayerId)
                     {
                         getAlert = true;
 
