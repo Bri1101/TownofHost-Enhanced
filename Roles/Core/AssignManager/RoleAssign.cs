@@ -191,7 +191,7 @@ public class RoleAssign
         // Take - Takes the first x roles of the list ... x is the maximum number of roles we could need of that team
 
         Roles[RoleAssignType.Impostor] = Roles[RoleAssignType.Impostor].Shuffle(rd).Take(optImpNum).ToList();
-        Roles[RoleAssignType.Impostor] = Roles[RoleAssignType.Madmate].Shuffle(rd).Take(optMadmateNum).ToList();
+        Roles[RoleAssignType.Madmate] = Roles[RoleAssignType.Madmate].Shuffle(rd).Take(optMadmateNum).ToList();
         Roles[RoleAssignType.NeutralKilling] = Roles[RoleAssignType.NeutralKilling].Shuffle(rd).Take(optNeutralKillingNum).ToList();
         Roles[RoleAssignType.NeutralApocalypse] = Roles[RoleAssignType.NeutralApocalypse].Shuffle(rd).Take(optNeutralApocalypseNum).ToList();
         Roles[RoleAssignType.NonKillingNeutral] = Roles[RoleAssignType.NonKillingNeutral].Shuffle(rd).Take(optNonNeutralKillingNum).ToList();

@@ -1,7 +1,5 @@
 using AmongUs.GameOptions;
-using MS.Internal.Xml.XPath;
 using TOHE.Roles.AddOns;
-using TOHE.Roles.AddOns.Impostor;
 using TOHE.Roles.Core;
 using TOHE.Roles.Crewmate;
 using static TOHE.Options;
@@ -46,6 +44,17 @@ internal class Scammer : RoleBase
         {
             addons = addons.Where(role => role.GetMode() != 0).ToList();
         }
+    }
+    public override void Add(byte playerId)
+    {
+        if (AmongUsClient.Instance.AmHost)
+        {
+            CustomRoleManager.CheckDeadBodyOthers.Add(OthersAfterPlayerDeathTask);
+        }
+    }
+    public override void Remove(byte playerId)
+    {
+        CustomRoleManager.CheckDeadBodyOthers.Add(OthersAfterPlayerDeathTask);
     }
 
     public override bool CanUseKillButton(PlayerControl pc) => false;
@@ -105,20 +114,35 @@ internal class Scammer : RoleBase
 
         return true;
     }
-
-    public override void OnFixedUpdate(PlayerControl player, bool lowLoad, long nowTime)
+    private void OthersAfterPlayerDeathTask(PlayerControl killer, PlayerControl target, bool inMeeting)
     {
-        if (lowLoad || !player.IsAlive() || Main.AliveImpostorCount >= 2) return;
+        if (_Player == null || !_Player.IsAlive() || Main.AliveImpostorCount != 1) return;
+        ChangeRole(inMeeting);
+    }
+    private void ChangeRole(bool inMeeting)
+    {
+        var scammer = _Player;
 
-        if (LastImpostor.currentId == player.PlayerId && Main.AliveImpostorCount < 2)
+        if (Main.AliveImpostorCount < 2)
         {
-            player.GetRoleClass().OnRemove(player.PlayerId);
-            player.RpcChangeRoleBasis(CustomRoles.Refugee);
-            player.RpcSetCustomRole(CustomRoles.Refugee);
-            player.GetRoleClass().OnAdd(player.PlayerId);
-            player.SyncSettings();
-            player.SetKillCooldown();
-            player.Notify(string.Format(GetString("ScammerToRefugeeMsg"), CustomRoles.Refugee.ToString()));
+            scammer.GetRoleClass().OnRemove(scammer.PlayerId);
+            scammer.RpcChangeRoleBasis(CustomRoles.Refugee);
+            scammer.RpcSetCustomRole(CustomRoles.Refugee);
+            scammer.GetRoleClass().OnAdd(scammer.PlayerId);
+            scammer.SyncSettings();
+
+            scammer.RpcGuardAndKill();
+            scammer.ResetKillCooldown();
+            scammer.SetKillCooldown();
+
+            if (inMeeting)
+            {
+                SendMessage(GetString("ScammerToRefugeeMsg"), sendTo: scammer.PlayerId);
+            }
+            else
+            {
+                scammer.Notify(string.Format(GetString("ScammerToRefugeeMsg"), CustomRoles.Refugee.ToString()));
+            }
         }
     }
 }
