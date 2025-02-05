@@ -159,7 +159,7 @@ internal class Huntsman : RoleBase
             && target.Is(CustomRoles.CursedSoul) || target.Is(CustomRoles.Soulless)) return false;
 
         if (player.Is(CustomRoles.Madmate)
-            && target.GetCustomRole().IsImpostor()
+            && target.CheckMMCanSeeImp()
             || ((target.GetCustomRole().IsMadmate() || target.Is(CustomRoles.Madmate)) && Madmate.MadmateKnowWhosMadmate.GetBool())) return false;
 
         return true;
