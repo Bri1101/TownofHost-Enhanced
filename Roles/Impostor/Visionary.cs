@@ -26,8 +26,13 @@ internal class Visionary : RoleBase
                 or CustomRoles.Infected
                 or CustomRoles.Contagious
                 or CustomRoles.Egoist
-                or CustomRoles.Recruit)
-                return Main.roleColors[CustomRoles.Knight];
+                or CustomRoles.Recruit
+                or CustomRoles.Soulless)
+                return "7f8c8d";
+            if (SubRole is CustomRoles.Admired)
+            {
+                return Main.roleColors[CustomRoles.Bait];
+            }
         }
 
         if (Main.PlayerStates[target.PlayerId].IsNecromancer)
@@ -50,6 +55,6 @@ internal class Visionary : RoleBase
             return Main.roleColors[CustomRoles.Coven];
         }
 
-        return Main.roleColors[CustomRoles.Knight];
+        return "7f8c8d";
     }
 }

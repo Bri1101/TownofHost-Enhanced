@@ -526,7 +526,7 @@ class MurderPlayerPatch
             Utils.SyncAllSettings();
         }
 
-        Utils.NotifyRoles();
+        Main.Instance.StartCoroutine(Utils.NotifyEveryoneAsync(speed: 4));
     }
     public static void AfterPlayerDeathTasks(PlayerControl killer, PlayerControl target, bool inMeeting)
     {
@@ -783,22 +783,10 @@ class ShapeshiftPatch
         {
             var time = animate ? 1.2f : 0.5f;
             //Forced update players name
-            if (shapeshifting)
+            _ = new LateTask(() =>
             {
-                _ = new LateTask(() =>
-                {
-                    Utils.NotifyRoles(SpecifyTarget: shapeshifter, NoCache: true);
-                },
-                time, "ShapeShiftNotify");
-            }
-            else
-            {
-                _ = new LateTask(() =>
-                {
-                    Utils.NotifyRoles(NoCache: true);
-                },
-                time, "UnShiftNotify");
-            }
+                Utils.NotifyRoles(SpecifyTarget: shapeshifter, NoCache: true);
+            }, time, shapeshifting ? "ShapeShiftNotify" : "UnShiftNotify");
         }
     }
 }
@@ -1076,7 +1064,7 @@ class ReportDeadBodyPatch
         NameNotifyManager.Reset();
 
         // Update Notify Roles for Meeting
-        Utils.DoNotifyRoles(isForMeeting: true, NoCache: true, CamouflageIsForMeeting: true);
+        Utils.DoNotifyRoles(isForMeeting: true, CamouflageIsForMeeting: true);
 
         // Sync all settings on meeting start
         _ = new LateTask(Utils.SyncAllSettings, 3f, "Sync all settings after report");
@@ -1087,7 +1075,8 @@ class FixedUpdateInNormalGamePatch
 {
     private static readonly StringBuilder Mark = new(20);
     private static readonly StringBuilder Suffix = new(120);
-    private static readonly Dictionary<byte, int> BufferTime = [];
+    public static readonly Dictionary<byte, int> BufferTime = [];
+    public static readonly Dictionary<byte, int> TeleportBuffer = [];
     private static int LevelKickBufferTime = 20;
 
     public static async void Postfix(PlayerControl __instance)
@@ -1137,26 +1126,30 @@ class FixedUpdateInNormalGamePatch
 
         // The code is called once every 1 second (by one player)
         bool lowLoad = false;
-        if (Options.LowLoadMode.GetBool())
+
+        if (!BufferTime.TryGetValue(player.PlayerId, out var timerLowLoad))
         {
-            if (!BufferTime.TryGetValue(player.PlayerId, out var timerLowLoad))
-            {
-                BufferTime[player.PlayerId] = 30;
-                timerLowLoad = 30;
-            }
+            BufferTime[player.PlayerId] = 30;
+            timerLowLoad = 30;
+        }
 
-            timerLowLoad--;
+        timerLowLoad--;
 
-            if (timerLowLoad > 0)
-            {
+        if (timerLowLoad > 0)
+        {
+            if (Options.LowLoadMode.GetBool())
                 lowLoad = true;
-            }
-            else
-            {
-                timerLowLoad = 30;
-            }
+        }
+        else
+        {
+            timerLowLoad = 30;
+        }
 
-            BufferTime[player.PlayerId] = timerLowLoad;
+        BufferTime[player.PlayerId] = timerLowLoad;
+
+        if (__instance.AmOwner && timerLowLoad == 30)
+        {
+            TeleportBuffer.Clear();
         }
 
         if (!lowLoad)
@@ -1257,7 +1250,7 @@ class FixedUpdateInNormalGamePatch
                 if (localplayer)
                 {
                     if (CustomNetObject.AllObjects.Count > 0)
-                        CustomNetObject.FixedUpdate();
+                        CustomNetObject.FixedUpdate(lowLoad, timerLowLoad);
 
                     if (!lowLoad)
                         CovenManager.NecronomiconCheck();
@@ -1282,7 +1275,7 @@ class FixedUpdateInNormalGamePatch
 
             if (GameStates.IsInTask && !AntiBlackout.SkipTasks)
             {
-                CustomRoleManager.OnFixedUpdate(player, lowLoad, Utils.GetTimeStamp());
+                CustomRoleManager.OnFixedUpdate(player, lowLoad, Utils.GetTimeStamp(), timerLowLoad);
 
                 player.OnFixedAddonUpdate(lowLoad);
 
@@ -1862,8 +1855,8 @@ class PlayerControlCompleteTaskPatch
         // Add task for Workhorse
         ret &= Workhorse.OnAddTask(player);
 
-        Utils.NotifyRoles(SpecifySeer: player, ForceLoop: true);
-        Utils.NotifyRoles(SpecifyTarget: player, ForceLoop: true);
+        Utils.NotifyRoles(SpecifySeer: player);
+        Utils.NotifyRoles(SpecifyTarget: player);
 
         return ret;
     }

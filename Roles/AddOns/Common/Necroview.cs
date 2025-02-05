@@ -29,8 +29,9 @@ public class Necroview : IAddon
                 or CustomRoles.Infected
                 or CustomRoles.Contagious
                 or CustomRoles.Egoist
-                or CustomRoles.Recruit)
-                return Main.roleColors[CustomRoles.Knight];
+                or CustomRoles.Recruit
+                or CustomRoles.Soulless)
+                return "7f8c8d";
         }
 
         if (customRole.IsImpostorTeamV2() || target.IsAnySubRole(role => role.IsImpostorTeamV2()))
@@ -47,7 +48,7 @@ public class Necroview : IAddon
         {
             return Main.roleColors[CustomRoles.Coven];
         }
-        return Main.roleColors[CustomRoles.Knight];
+        return "7f8c8d";
     }
 }
 
