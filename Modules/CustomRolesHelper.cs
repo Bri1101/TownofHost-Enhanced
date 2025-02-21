@@ -301,17 +301,17 @@ public static class CustomRolesHelper
             CustomRoles.Shapeshifter or
             CustomRoles.Phantom;
     }
-    public static int AliveImpNumV3 => Main.AllAlivePlayerControls.Count(pc => pc.GetCustomRole().IsImpostorTeamV3());
 
-    public static bool CheckMMCanSeeImp(this PlayerControl pc, bool CheckImp = true)
+    public static bool CheckImpTeamCanSeeTeammates(this PlayerControl pc, bool CheckImp = true)
     {
-        var role = pc.GetCustomRole();
-
-        return (role.IsImpostor() && CheckImp)
-                || (role == CustomRoles.Parasite && AliveImpNumV3 < 2)
-                || (role == CustomRoles.Crewpostor && Crewpostor.CPAndAlliesKnowEachOther.GetBool())
-                || role is CustomRoles.Refugee
-                or CustomRoles.Scammer;
+        return pc.GetCustomRole() switch
+        {
+            var r when r.IsImpostor() => CheckImp,
+            CustomRoles.Refugee or CustomRoles.Scammer => true,
+            CustomRoles.Parasite => Main.AliveImpostorCount < 2,
+            CustomRoles.Crewpostor => Crewpostor.CPAndAlliesKnowEachOther.GetBool() || Main.AliveImpostorCount < 2,
+            _ => false
+        };
     }
     public static bool IsCoven(this CustomRoles role)
     {

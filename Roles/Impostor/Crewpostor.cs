@@ -101,7 +101,7 @@ internal class Crewpostor : RoleBase
             Main.AllAlivePlayerControls.Where(x =>
                 x.PlayerId != player.PlayerId
                 && !(x.GetCustomRole() is CustomRoles.NiceMini or CustomRoles.EvilMini or CustomRoles.Solsticer)
-                && (CPAndAlliesKnowEachOther.GetBool() || !(x.CheckMMCanSeeImp() || (x.Is(CustomRoles.Madmate) && !Madmate.ImpCanKillMadmate.GetBool())))).ToList();
+                && (CPAndAlliesKnowEachOther.GetBool() || !(x.CheckImpTeamCanSeeTeammates() || (x.Is(CustomRoles.Madmate) && !Madmate.ImpCanKillMadmate.GetBool())))).ToList();
 
         if (!list.Any())
         {

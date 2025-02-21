@@ -4,6 +4,7 @@ using InnerNet;
 using System;
 using TOHE.Roles.AddOns.Impostor;
 using TOHE.Roles.Core;
+using TOHE.Roles.Coven;
 using static TOHE.Options;
 using static TOHE.Translator;
 
@@ -158,8 +159,11 @@ internal class Huntsman : RoleBase
         if (player.Is(CustomRoles.Soulless)
             && target.Is(CustomRoles.CursedSoul) || target.Is(CustomRoles.Soulless)) return false;
 
+        if (player.Is(CustomRoles.Enchanted)
+            && target.IsPlayerCoven() || (target.Is(CustomRoles.Enchanted) && Ritualist.EnchantedKnowsEnchanted.GetBool())) return false;
+
         if (player.Is(CustomRoles.Madmate)
-            && target.CheckMMCanSeeImp()
+            && target.CheckImpTeamCanSeeTeammates()
             || ((target.GetCustomRole().IsMadmate() || target.Is(CustomRoles.Madmate)) && Madmate.MadmateKnowWhosMadmate.GetBool())) return false;
 
         return true;
