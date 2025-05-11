@@ -83,14 +83,21 @@ internal class Psychic : RoleBase
     public override void OnReportDeadBody(PlayerControl reported, NetworkedPlayerInfo target)
     {
         if (Fresh.GetBool() || RedPlayer == null || RedPlayer.Count < 1)
+        {
+            if (Fresh.GetBool())
+            {
+                RedPlayer.Clear(); // Force generate new red names so its freshed?
+            }
+
             GetRedName();
+        }
     }
     private void GetRedName()
     {
-        if (!_Player.IsAlive() || !AmongUsClient.Instance.AmHost) return;
+        if (_Player == null || !_Player.IsAlive() || !AmongUsClient.Instance.AmHost) return;
 
-        List<PlayerControl> BadListPc = Main.AllAlivePlayerControls.Where(x => Illusionist.IsNonCovIllusioned(x.PlayerId) ||
-        (x.GetCustomRole().IsImpostorTeamV3() && !x.Is(CustomRoles.Trickster) && !x.Is(CustomRoles.Admired)) ||
+        List<PlayerControl> BadListPc = [.. Main.AllAlivePlayerControls.Where(x => Illusionist.IsNonCovIllusioned(x.PlayerId) ||
+        (x.Is(Custom_Team.Impostor) && !x.Is(CustomRoles.Trickster) && !x.Is(CustomRoles.Admired) && !x.Is(CustomRoles.Narc)) ||
         x.IsAnySubRole(x => x.IsConverted()) ||
         (x.GetCustomRole().IsCrewKiller() && CkshowEvil.GetBool()) ||
         (x.GetCustomRole().IsNE() && NEshowEvil.GetBool()) ||
@@ -99,7 +106,7 @@ internal class Psychic : RoleBase
         (x.GetCustomRole().IsNK() && NKshowEvil.GetBool()) ||
         (x.GetCustomRole().IsNA() && NAshowEvil.GetBool()) ||
         (x.GetCustomRole().IsCoven() && CovshowEvil.GetBool())
-        ).ToList();
+        )];
 
         var randomBadPlayer = BadListPc.RandomElement();
         List<byte> AllList = [];

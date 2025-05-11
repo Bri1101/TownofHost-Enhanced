@@ -140,7 +140,7 @@ namespace TOHE.Modules
                     .Write(false)
                     .EndRpc();
                 sender.SendMessage();
-            }, 0.4f);
+            }, 0.4f, "Send RPC FixModdedClientCNOText", shoudLog: false);
 
             MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
             writer.StartMessage(6);
@@ -170,6 +170,7 @@ namespace TOHE.Modules
                 playerControl.PlayerId = 255;
                 playerControl.isNew = false;
                 playerControl.notRealPlayer = true;
+                playerControl.NetTransform.SnapTo(new(-200, -200));
 
                 MessageWriter msg = MessageWriter.Get();
                 msg.StartMessage(5);
@@ -177,6 +178,7 @@ namespace TOHE.Modules
                 AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
                 msg.EndMessage();
 
+                /*
                 // This makes innersloth dog shit server think PlayerControl and PlayerNetTransform is a LobbyBehavoir,
                 // so it will disable checks regarding it
                 if (GameStates.IsVanillaServer)
@@ -217,6 +219,7 @@ namespace TOHE.Modules
 
                     msg.EndMessage();
                 }
+                */
 
                 AmongUsClient.Instance.SendOrDisconnect(msg);
                 msg.Recycle();
@@ -350,13 +353,15 @@ namespace TOHE.Modules
             playerControl.PlayerId = 255;
             playerControl.isNew = false;
             playerControl.notRealPlayer = true;
+            playerControl.NetTransform.SnapTo(new(-200, -200));
 
-            MessageWriter msg = MessageWriter.Get();
+            MessageWriter msg = MessageWriter.Get(SendOption.Reliable);
             msg.StartMessage(5);
             msg.Write(AmongUsClient.Instance.GameId);
             AmongUsClient.Instance.WriteSpawnMessage(playerControl, -2, SpawnFlags.None, msg);
             msg.EndMessage();
 
+            /*
             // This makes innersloth dog shit server think PlayerControl and PlayerNetTransform is a LobbyBehavoir,
             // so it will disable checks regarding it
             if (GameStates.IsVanillaServer)
@@ -397,6 +402,7 @@ namespace TOHE.Modules
 
                 msg.EndMessage();
             }
+            */
 
             AmongUsClient.Instance.SendOrDisconnect(msg);
             msg.Recycle();
