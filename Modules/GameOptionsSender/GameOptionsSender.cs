@@ -2,7 +2,6 @@ using AmongUs.GameOptions;
 using Hazel;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppSystem;
-using InnerNet;
 using TOHE.Modules.Rpc;
 
 namespace TOHE.Modules;
@@ -30,6 +29,8 @@ public abstract class GameOptionsSender
 
     public virtual void SendGameOptions()
     {
+        if (!AmongUsClient.Instance.AmHost) return;
+
         var opt = BuildGameOptions();
         var currentGameMode = AprilFoolsMode.IsAprilFoolsModeToggledOn //April fools mode toggled on by host
             ? opt.AprilFoolsOnMode : opt.GameMode; //Change game mode, same as well as in "RpcSyncSettings()"
@@ -39,10 +40,10 @@ public abstract class GameOptionsSender
         writer.Write(opt.Version);
         writer.StartMessage(0);
         writer.Write((byte)currentGameMode);
-        if (opt.TryCast<NormalGameOptionsV09>(out var normalOpt))
-            NormalGameOptionsV09.Serialize(writer, normalOpt);
-        else if (opt.TryCast<HideNSeekGameOptionsV09>(out var hnsOpt))
-            HideNSeekGameOptionsV09.Serialize(writer, hnsOpt);
+        if (opt.TryCast<NormalGameOptionsV10>(out var normalOpt))
+            NormalGameOptionsV10.Serialize(writer, normalOpt);
+        else if (opt.TryCast<HideNSeekGameOptionsV10>(out var hnsOpt))
+            HideNSeekGameOptionsV10.Serialize(writer, hnsOpt);
         else
         {
             writer.Recycle();
@@ -79,6 +80,8 @@ public abstract class GameOptionsSender
     }
     protected virtual void SendOptionsArray(Il2CppStructArray<byte> optionArray, byte LogicOptionsIndex, int targetClientId)
     {
+        if (!AmongUsClient.Instance.AmHost) return;
+
         var message = new SendOptionsArray(optionArray);
 
         if (targetClientId < 0)

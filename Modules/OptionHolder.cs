@@ -3,6 +3,7 @@ using TOHE.Modules;
 using TOHE.Roles.AddOns;
 using TOHE.Roles.AddOns.Impostor;
 using TOHE.Roles.Core;
+using TOHE.Roles.Core.DraftAssign;
 using UnityEngine;
 
 namespace TOHE;
@@ -56,6 +57,7 @@ public static class Options
             3 => CustomGameMode.HidenSeekTOHE, // HidenSeekTOHE must be after other game modes
             _ => CustomGameMode.Standard
         };
+    public static int prevGameMode = 0;
     public static readonly string[] gameModes =
     [
         "Standard",
@@ -66,7 +68,12 @@ public static class Options
         "Hide&SeekTOHE", // HidenSeekTOHE must be after other game modes
     ];
 
-
+    public static OptionItem DraftHeader;
+    public static OptionItem DraftMode;
+    public static OptionItem DraftableCount;
+    // public static OptionItem BucketCount;
+    public static bool devEnableDraft = false;
+    public static OptionItem DraftDeck;
 
     // 役職数・確率
     public static Dictionary<CustomRoles, int> roleCounts;
@@ -177,6 +184,9 @@ public static class Options
 
     // ------------ System Settings Tab ------------
     public static OptionItem BypassRateLimitAC;
+    public static OptionItem MaxSpiltReliablePacketsPerTick;
+    public static OptionItem MaxSpiltNonePacketsPerTick;
+
     public static OptionItem GradientTagsOpt;
     public static OptionItem EnableKillerLeftCommand;
     public static OptionItem ShowMadmatesInLeftCommand;
@@ -284,6 +294,7 @@ public static class Options
     public static OptionItem NumImpostorsHnS;
 
     // Confirm Ejection
+    public static OptionItem PlayEjectSfx;
     public static OptionItem CEMode;
     public static OptionItem ShowImpRemainOnEject;
     public static OptionItem ShowNKRemainOnEject;
@@ -363,6 +374,7 @@ public static class Options
     public static OptionItem DisableShieldAnimations;
     public static OptionItem DisableKillAnimationOnGuess;
     public static OptionItem DisableVanillaRoles;
+    public static OptionItem DisableHiddenRoles;
     public static OptionItem DisableTaskWin;
     public static OptionItem DisableTaskWinIfAllCrewsAreDead;
     public static OptionItem DisableTaskWinIfAllCrewsAreConverted;
@@ -583,6 +595,12 @@ public static class Options
     public static OptionItem TransformedNeutralApocalypseCanBeGuessed;
     public static OptionItem ApocCanSeeEachOthersAddOns;
 
+    // Neutral Pariah
+    public static OptionItem PariahWinWhenDead;
+    public static OptionItem PariahHasImpVis;
+    public static OptionItem PariahImpVisMode;
+    public static OptionItem PariahCanVent;
+    public static OptionItem PariahVentMode;
 
     // Coven
     public static OptionItem CovenRolesMinPlayer;
@@ -714,7 +732,7 @@ public static class Options
     private static System.Collections.IEnumerator CoLoadOptions()
     {
         //#######################################
-        // 31800 last id for roles/add-ons (Next use 31900)
+        // 32500 last id for roles/add-ons (Next use 32600)
         // Limit id for roles/add-ons --- "59999"
         //#######################################
 
@@ -722,8 +740,10 @@ public static class Options
         // Start Load Settings
         if (IsLoaded) yield break;
         OptionSaver.Initialize();
+        OptionCopier.Initialize();
         GroupAddons();
 
+        Logger.Info("Settings loaded", "Load Options");
         yield return null;
 
         // Preset Option
@@ -852,7 +872,7 @@ public static class Options
         RemoveIncompatibleAddOnsMidGame = BooleanOptionItem.Create(60034, "RemoveIncompatibleAddOnsMidGame", true, TabGroup.Addons, false)
             .SetGameMode(CustomGameMode.Standard);
         #endregion
-
+        Logger.Info("Role/Addon settings setup", "Load Options");
         yield return null;
 
         #region Impostors Settings
@@ -928,7 +948,7 @@ public static class Options
         CustomRoleManager.GetNormalOptions(Custom_RoleType.ImpostorGhosts).ForEach(r => r.SetupCustomOption());
 
         #endregion
-
+        Logger.Info("Impostor settings setup", "Load Options");
         yield return null;
 
         #region Crewmates Settings
@@ -1005,7 +1025,7 @@ public static class Options
 
 
         #endregion
-
+        Logger.Info("Crewmate settings setup", "Load Options");
         yield return null;
 
         #region Neutrals Settings
@@ -1046,6 +1066,29 @@ public static class Options
 
         CustomRoleManager.GetNormalOptions(Custom_RoleType.NeutralKilling).ForEach(r => r.SetupCustomOption());
 
+        TextOptionItem.Create(10000116, "RoleType.NeutralPariah", TabGroup.NeutralRoles)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetColor(new Color32(127, 140, 141, byte.MaxValue));
+
+        PariahWinWhenDead = BooleanOptionItem.Create(10000117, "PariahWinWhenDead", false, TabGroup.NeutralRoles, false)
+            .SetGameMode(CustomGameMode.Standard);
+
+        PariahHasImpVis = BooleanOptionItem.Create(10000118, "PariahHasImpVis", true, TabGroup.NeutralRoles, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetHeader(true);
+        PariahImpVisMode = StringOptionItem.Create(10000119, "PariahImpVisMode", EnumHelper.GetAllNames<PariahManager.VisOptionList>(), 0, TabGroup.NeutralRoles, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetParent(PariahHasImpVis);
+        PariahManager.RunSetUpImpVisOptions(170032);
+        PariahCanVent = BooleanOptionItem.Create(10000120, "PariahCanVent", true, TabGroup.NeutralRoles, false)
+            .SetGameMode(CustomGameMode.Standard);
+        PariahVentMode = StringOptionItem.Create(10000121, "PariahVentMode", EnumHelper.GetAllNames<PariahManager.VentOptionList>(), 0, TabGroup.NeutralRoles, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetParent(PariahCanVent);
+        PariahManager.RunSetUpVentOptions(270032);
+
+        CustomRoleManager.GetNormalOptions(Custom_RoleType.NeutralPariah).ForEach(r => r.SetupCustomOption());
+
         TextOptionItem.Create(10000115, "RoleType.NeutralApocalypse", TabGroup.NeutralRoles)
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(127, 140, 141, byte.MaxValue));
@@ -1059,7 +1102,7 @@ public static class Options
 
         CustomRoleManager.GetNormalOptions(Custom_RoleType.NeutralApocalypse).ForEach(r => r.SetupCustomOption());
         #endregion
-
+        Logger.Info("Neutral settings setup", "Load Options");
         yield return null;
 
         #region Coven Settings
@@ -1098,7 +1141,7 @@ public static class Options
 
         CustomRoleManager.GetNormalOptions(Custom_RoleType.CovenUtility).ForEach(r => r.SetupCustomOption());
         #endregion
-
+        Logger.Info("Coven settings setup", "Load Options");
         yield return null;
 
         #region Add-Ons Settings
@@ -1127,8 +1170,8 @@ public static class Options
             if (addonType.Key == AddonTypes.Impostor)
                 Madmate.SetupCustomMenuOptions();
 
-            if (addonType.Key == AddonTypes.Misc)
-                SetupLoversRoleOptionsToggle(23600);
+            // if (addonType.Key == AddonTypes.Misc)
+            //     SetupLoversRoleOptionsToggle(23600);
 
             if (addonType.Key == AddonTypes.Experimental)
                 NarcManager.SetUpOptionsForNarc();
@@ -1155,7 +1198,7 @@ public static class Options
 
 
         #endregion
-
+        Logger.Info("Addon settings setup", "Load Options");
         yield return null;
 
         #region Experimental Roles/Add-ons Settings
@@ -1169,6 +1212,13 @@ public static class Options
         #region System Settings
         BypassRateLimitAC = BooleanOptionItem.Create(60049, "BypassRateLimitAC", true, TabGroup.SystemSettings, false)
             .SetHeader(true);
+        MaxSpiltReliablePacketsPerTick = IntegerOptionItem.Create(60048, "MaxSpiltReliablePacketsPerTick", new(1, 100, 1), 3, TabGroup.SystemSettings, false)
+            .SetValueFormat(OptionFormat.Pieces)
+            .SetParent(BypassRateLimitAC);
+        MaxSpiltNonePacketsPerTick = IntegerOptionItem.Create(60047, "MaxSpiltNonePacketsPerTick", new(1, 100, 1), 5, TabGroup.SystemSettings, false)
+            .SetValueFormat(OptionFormat.Pieces)
+            .SetParent(BypassRateLimitAC);
+
         GradientTagsOpt = BooleanOptionItem.Create(60031, "EnableGadientTags", false, TabGroup.SystemSettings, false)
             .SetHeader(true);
         EnableKillerLeftCommand = BooleanOptionItem.Create(60040, "EnableKillerLeftCommand", true, TabGroup.SystemSettings, false)
@@ -1328,7 +1378,7 @@ public static class Options
             .SetColor(Color.cyan)
             .SetHeader(true);
         #endregion 
-
+        Logger.Info("System settings setup", "Load Options");
         yield return null;
 
         #region Game Settings
@@ -1350,12 +1400,44 @@ public static class Options
             .SetGameMode(CustomGameMode.HidenSeekTOHE)
             .SetValueFormat(OptionFormat.Players);
 
+        Logger.Info("Start of Draft Setup", "Draft Setup");
+        // Draft Mode
+        DraftHeader = TextOptionItem.Create(10000033, "MenuTitle.Draft", TabGroup.ModSettings)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetColor(new Color32(255, 238, 232, byte.MaxValue))
+            .SetHidden((!PlayerControl.LocalPlayer?.FriendCode?.GetDevUser().IsDev) ?? true);
 
+        DraftMode = BooleanOptionItem.Create(61000, "UseDraftMode", true, TabGroup.ModSettings, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetHeader(true);
+
+        DraftableCount = IntegerOptionItem.Create(61001, "DraftableCount", new(1, 10, 1), 3, TabGroup.ModSettings, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetParent(DraftMode);
+
+        DraftAssign.LoadRoleDecks();
+        DraftDeck = StringOptionItem.Create(61002, "DraftDeck", DraftAssign.RoleDecks.Keys.ToArray(), 0, TabGroup.ModSettings, false, useGetString: false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetParent(DraftMode);
+
+        Logger.Info("Draft Bucket Options set up", "OptionsHolder.CoLoadOptions");
+
+        if ((!PlayerControl.LocalPlayer?.FriendCode?.GetDevUser().IsDev) ?? true)
+        {
+            DraftMode.SetHidden(true);
+        }
+
+        Logger.Info("End of Draft Setup", "Draft Setup");
 
         // Confirm Ejections Mode
         TextOptionItem.Create(10000024, "MenuTitle.Ejections", TabGroup.ModSettings)
+        .SetGameMode(CustomGameMode.Standard)
+        .SetColor(new Color32(255, 238, 232, byte.MaxValue));
+
+        PlayEjectSfx = BooleanOptionItem.Create(60439, "PlayEjectSfx", false, TabGroup.ModSettings, false)
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(255, 238, 232, byte.MaxValue));
+
         CEMode = StringOptionItem.Create(60440, "ConfirmEjectionsMode", ConfirmEjectionsMode, 2, TabGroup.ModSettings, false)
             .SetGameMode(CustomGameMode.Standard)
             .SetHeader(true)
@@ -1656,6 +1738,9 @@ public static class Options
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(255, 153, 153, byte.MaxValue));
         DisableVanillaRoles = BooleanOptionItem.Create(60562, "DisableVanillaRoles", true, TabGroup.ModSettings, false)
+            .SetGameMode(CustomGameMode.Standard)
+            .SetColor(new Color32(255, 153, 153, byte.MaxValue));
+        DisableHiddenRoles = BooleanOptionItem.Create(60568, "DisableHiddenRoles", false, TabGroup.ModSettings, false)
             .SetGameMode(CustomGameMode.Standard)
             .SetColor(new Color32(255, 153, 153, byte.MaxValue));
         DisableTaskWin = BooleanOptionItem.Create(60563, "DisableTaskWin", false, TabGroup.ModSettings, false)
@@ -2101,7 +2186,7 @@ public static class Options
             .SetValueFormat(OptionFormat.Seconds)
             .SetColor(new Color32(217, 218, 255, byte.MaxValue));
         #endregion
-
+        Logger.Info("Game settings setup", "Load Options");
         yield return null;
 
         // End Load Settings

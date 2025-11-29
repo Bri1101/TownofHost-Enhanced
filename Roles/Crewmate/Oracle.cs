@@ -1,6 +1,7 @@
 using TOHE.Modules;
 using TOHE.Roles.Core;
 using TOHE.Roles.Coven;
+using TOHE.Roles.Neutral;
 using static TOHE.Options;
 using static TOHE.Translator;
 using static TOHE.Utils;
@@ -81,7 +82,8 @@ internal class Oracle : RoleBase
                 string text = "Crewmate";
                 if (ChangeRecruitTeam.GetBool())
                 {
-                    if (target.Is(CustomRoles.Admired) || target.Is(CustomRoles.Narc)) text = "Crewmate";
+                    if (Lich.IsCursed(target)) text = "Neutral";
+                    else if (target.Is(CustomRoles.Admired) || target.Is(CustomRoles.Narc)) text = "Crewmate";
                     else if (Illusionist.IsCovIllusioned(target.PlayerId)) text = "Crewmate";
                     else if (Illusionist.IsNonCovIllusioned(target.PlayerId)) text = "Coven";
                     else if (target.GetCustomRole().IsImpostorTeamV2() || target.GetCustomSubRoles().Any(role => role.IsImpostorTeamV2())) text = "Impostor";
@@ -91,7 +93,8 @@ internal class Oracle : RoleBase
                 }
                 else
                 {
-                    if (Illusionist.IsCovIllusioned(target.PlayerId)) text = "Crewmate";
+                    if (Lich.IsCursed(target)) text = "Neutral";
+                    else if (Illusionist.IsCovIllusioned(target.PlayerId)) text = "Crewmate";
                     else if (Illusionist.IsNonCovIllusioned(target.PlayerId)) text = "Coven";
                     else if (target.Is(CustomRoles.Narc)) text = "Crewmate";
                     else if (target.Is(Custom_Team.Impostor) && !target.Is(CustomRoles.Trickster)) text = "Impostor";
@@ -136,7 +139,7 @@ internal class Oracle : RoleBase
             }
 
             SendMessage(GetString("OracleCheck") + "\n" + msg + "\n\n" + string.Format(GetString("OracleCheckLimit"), abilityUse), player.PlayerId, ColorString(GetRoleColor(CustomRoles.Oracle), GetString("Oracle").ToUpper()));
-            SendMessage(GetString("VoteHasReturned"), player.PlayerId, title: ColorString(GetRoleColor(CustomRoles.Oracle), string.Format(GetString("VoteAbilityUsed"), GetString("Oracle"))));
+            SendMessage(GetString("VoteHasReturned"), player.PlayerId, title: ColorString(GetRoleColor(CustomRoles.Oracle), string.Format(GetString("VoteAbilityUsed"), GetString("Oracle"))), noReplay: true);
             return false;
         }
     }

@@ -1,6 +1,8 @@
+using AmongUs.InnerNet.GameDataMessages;
 using Hazel;
 using InnerNet;
 using System;
+using TOHE.Modules.Rpc;
 using UnityEngine;
 
 
@@ -142,18 +144,8 @@ namespace TOHE.Modules
                 sender.SendMessage();
             }, 0.4f, "Send RPC FixModdedClientCNOText", shoudLog: false);
 
-            MessageWriter writer = MessageWriter.Get(SendOption.Reliable);
-            writer.StartMessage(6);
-            writer.Write(AmongUsClient.Instance.GameId);
-            writer.WritePacked(player.GetClientId());
-
-            writer.StartMessage(5);
-            writer.WritePacked(playerControl.NetId);
-            writer.EndMessage();
-
-            writer.EndMessage();
-            AmongUsClient.Instance.SendOrDisconnect(writer);
-            writer.Recycle();
+            var message = new DespawnGameDataMessage(playerControl.NetId);
+            RpcUtils.LateSpecificSendMessage(message, player.GetClientId());
         }
 
         protected virtual void OnFixedUpdate(bool lowload, int timerLowLoad)
@@ -481,6 +473,7 @@ namespace TOHE.Modules
     {
         internal Firework(Vector2 position, List<byte> visibleList, byte OwnerId)
         {
+            if (!AmongUsClient.Instance.AmHost) return;
             CreateNetObject("<size=100%><font=\"VCR SDF\"><line-height=67%><alpha=#00>█<alpha=#00>█<alpha=#00>█<#f2ce1c>█<#f2eb0d>█<alpha=#00>█<alpha=#00>█<alpha=#00>█<br><alpha=#00>█<alpha=#00>█<#f2eb0d>█<#f2eb0d>█<#f2ce1c>█<#f2eb0d>█<alpha=#00>█<alpha=#00>█<br><alpha=#00>█<#f2eb0d>█<#f2eb0d>█<#f2eb0d>█<#f2eb0d>█<#f2ce1c>█<#f2eb0d>█<alpha=#00>█<br><alpha=#00>█<#e60000>█<#e60000>█<#f2f2f2>█<#e60000>█<#e60000>█<#f2f2f2>█<alpha=#00>█<br><alpha=#00>█<#f2f2f2>█<#f20d0d>█<#f20d0d>█<#f2f2f2>█<#f20d0d>█<#e60000>█<alpha=#00>█<br><#f2740d>█<#f2740d>█<#f2f2f2>█<#f20d0d>█<#f20d0d>█<#f2f2f2>█<#e60000>█<#f2740d>█<br><#f2740d>█<#f2740d>█<#f2740d>█<#f2f2f2>█<#f20d0d>█<#f20d0d>█<#f2740d>█<#f2740d>█<br><#cb5f06>█<#cb5f06>█<#cb5f06>█<#f20d0d>█<#f2f2f2>█<#cb5f06>█<#cb5f06>█<#cb5f06>█<br></color></line-height></font></size>", position);
             Main.AllAlivePlayerControls.ExceptBy(visibleList, x => x.PlayerId).Do(Hide);
             this.OwnerId = OwnerId;

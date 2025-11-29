@@ -120,7 +120,7 @@ internal class Medic : RoleBase
     }
 
     public static bool IsProtected(byte id)
-        => GlobalProtectedList.Contains(id) && Main.PlayerStates.TryGetValue(id, out var ps) && !ps.IsDead;
+        => GlobalProtectedList.Contains(id) && Main.PlayerStates.TryGetValue(id, out var ps) && !ps.IsDead && ProtectedPlayers.Any(x => x.Value.Contains(id));
 
     private bool IsProtect(byte id)
         => ProtectedList.Contains(id) && Main.PlayerStates.TryGetValue(id, out var ps) && !ps.IsDead;
@@ -196,6 +196,15 @@ internal class Medic : RoleBase
 
         Logger.Info($"{target.GetNameWithRole()} : Shield Shatter from the Medic", "Medic");
         return true;
+    }
+    public override bool OnRoleGuess(bool isUI, PlayerControl target, PlayerControl pc, CustomRoles role, ref bool guesserSuicide)
+    {
+        if (role != CustomRoles.Medic) return false;
+        if (target.Is(CustomRoles.Onbound) || target.Is(CustomRoles.Rebound)) return false;
+        
+        AfterMedicDeadTask(target);
+
+        return false;
     }
     private void ChangeToCrewmate()
     {

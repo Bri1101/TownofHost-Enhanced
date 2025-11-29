@@ -1,5 +1,6 @@
 using Hazel;
 using TOHE.Modules;
+using TOHE.Modules.Rpc;
 using static TOHE.Options;
 
 namespace TOHE.Roles.Impostor;
@@ -16,6 +17,7 @@ internal class Consigliere : RoleBase
     private static OptionItem KillCooldown;
     private static OptionItem DivinationMaxCount;
     private static OptionItem ImpsCanSeeReveals;
+    private static OptionItem RevealsPersist;
 
     private static readonly Dictionary<byte, HashSet<byte>> DivinationTarget = [];
 
@@ -27,6 +29,8 @@ internal class Consigliere : RoleBase
         DivinationMaxCount = IntegerOptionItem.Create(Id + 11, "ConsigliereDivinationMaxCount", new(1, 15, 1), 5, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Consigliere])
             .SetValueFormat(OptionFormat.Times);
         ImpsCanSeeReveals = BooleanOptionItem.Create(Id + 12, "ConsigliereImpsCanSeeReveals", true, TabGroup.ImpostorRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Consigliere]);
+        RevealsPersist = BooleanOptionItem.Create(Id + 13, "ConsigliereRevealsPersist", true, TabGroup.ImpostorRoles, false)
+            .SetParent(ImpsCanSeeReveals);
     }
     public override void Init()
     {
@@ -44,10 +48,9 @@ internal class Consigliere : RoleBase
 
     private static void SendRPC(byte playerId, byte targetId)
     {
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetConsigliere, SendOption.Reliable, -1);
-        writer.Write(playerId);
-        writer.Write(targetId);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+        var msg = new RpcSetConsigliere(PlayerControl.LocalPlayer.NetId, playerId, targetId);
+        RpcUtils.LateBroadcastReliableMessage(msg);
+
     }
     public static void ReceiveRPC(MessageReader reader)
     {
@@ -95,6 +98,8 @@ internal class Consigliere : RoleBase
         foreach (var cs in DivinationTarget.Keys)
         {
             if (DivinationTarget[cs].Contains(target.PlayerId)) result = true;
+
+            if (!cs.GetPlayer().IsAlive() && !RevealsPersist.GetBool()) result = false;
 
             // when seer is Sheriff or ChiefOfPolice and Consigliere is not Narc,seer shouldn't see target's role
             if (imp.IsPolice() && !cs.GetPlayer().Is(CustomRoles.Narc)) result = false;

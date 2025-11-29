@@ -1,4 +1,5 @@
 using Hazel;
+using TOHE.Modules.Rpc;
 using TOHE.Roles.AddOns.Common;
 using TOHE.Roles.AddOns.Impostor;
 using TOHE.Roles.Core;
@@ -13,6 +14,7 @@ public static class NameColorManager
 {
     public static string ApplyNameColorData(this string name, PlayerControl seer, PlayerControl target, bool isMeeting)
     {
+        if (name.IsNullOrWhiteSpace()) name = "Player";
         if (!AmongUsClient.Instance.IsGameStarted) return name;
 
         if (!TryGetData(seer, target, out var colorCode))
@@ -126,6 +128,7 @@ public static class NameColorManager
             {
                 if (Nemesis.PreventKnowRole(seer)) return false;
                 if (Retributionist.PreventKnowRole(seer)) return false;
+                if (Doppelganger.PreventKnowRole(seer)) return false;
 
                 if (!Options.GhostCanSeeOtherRoles.GetBool())
                     return false;
@@ -177,12 +180,8 @@ public static class NameColorManager
     private static void SendRPC(byte seerId, byte targetId = byte.MaxValue, string colorCode = "")
     {
         if (!AmongUsClient.Instance.AmHost) return;
-
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SetNameColorData, SendOption.Reliable, -1);
-        writer.Write(seerId);
-        writer.Write(targetId);
-        writer.Write(colorCode);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+        var msg = new RpcSetNameColorData(PlayerControl.LocalPlayer.NetId, seerId, targetId, colorCode);
+        RpcUtils.LateBroadcastReliableMessage(msg);
     }
     public static void ReceiveRPC(MessageReader reader)
     {

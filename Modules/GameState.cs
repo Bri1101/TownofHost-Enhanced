@@ -1,7 +1,7 @@
 using AmongUs.GameOptions;
-using Hazel;
 using System;
 using TOHE.Modules;
+using TOHE.Modules.Rpc;
 using TOHE.Roles.AddOns.Impostor;
 using TOHE.Roles.Core;
 using TOHE.Roles.Impostor;
@@ -149,12 +149,12 @@ public class PlayerState(byte playerId)
         {
             if (pc != null) countTypes = pc.GetCustomRole().GetCountTypes();
 
-            // Remove lovers on Cleansed
-            if (pc.Is(CustomRoles.Lovers))
-            {
-                var lover = Main.PlayerStates.Values.FirstOrDefault(x => x.PlayerId != pc.PlayerId && x.SubRoles.Contains(CustomRoles.Lovers));
-                lover?.RemoveSubRole(CustomRoles.Lovers);
-            }
+            // // Remove lovers on Cleansed
+            // if (pc.Is(CustomRoles.Lovers))
+            // {
+            //     var lover = Main.PlayerStates.Values.FirstOrDefault(x => x.PlayerId != pc.PlayerId && x.SubRoles.Contains(CustomRoles.Lovers));
+            //     lover?.RemoveSubRole(CustomRoles.Lovers);
+            // }
 
             foreach (var subRole in SubRoles.ToArray())
             {
@@ -267,12 +267,75 @@ public class PlayerState(byte playerId)
             }
         }
 
-        if (!AmongUsClient.Instance.AmHost) return;
+        var pc = PlayerId.GetPlayer();
+        if (pc == null) return;
 
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.RemoveSubRole, SendOption.Reliable);
-        writer.Write(PlayerId);
-        writer.WritePacked((int)addOn);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+        // check for role addon
+        if (pc.Is(CustomRoles.Madmate))
+        {
+            countTypes = Madmate.MadmateCountMode.GetInt() switch
+            {
+                0 => CountTypes.OutOfGame,
+                1 => CountTypes.Impostor,
+                2 => countTypes,
+                _ => throw new NotImplementedException()
+            };
+        }
+        if (pc.Is(CustomRoles.Charmed))
+        {
+            countTypes = Cultist.CharmedCountMode.GetInt() switch
+            {
+                0 => CountTypes.OutOfGame,
+                1 => CountTypes.Cultist,
+                2 => countTypes,
+                _ => throw new NotImplementedException()
+            };
+        }
+        if (pc.Is(CustomRoles.Recruit))
+        {
+            countTypes = Jackal.SidekickCountMode.GetInt() switch
+            {
+                0 => CountTypes.Jackal,
+                1 => CountTypes.OutOfGame,
+                2 => countTypes,
+                _ => throw new NotImplementedException()
+            };
+        }
+        if (pc.Is(CustomRoles.Infected))
+        {
+            countTypes = CountTypes.Infectious;
+        }
+        if (pc.Is(CustomRoles.Contagious))
+        {
+            countTypes = Virus.ContagiousCountMode.GetInt() switch
+            {
+                0 => CountTypes.OutOfGame,
+                1 => CountTypes.Virus,
+                2 => countTypes,
+                _ => throw new NotImplementedException()
+            };
+        }
+        if (pc.Is(CustomRoles.Admired) || pc.Is(CustomRoles.Narc))
+        {
+            countTypes = CountTypes.Crew;
+        }
+        if (pc.Is(CustomRoles.Soulless))
+        {
+            countTypes = CountTypes.OutOfGame;
+        }
+        if (pc.Is(CustomRoles.Enchanted))
+        {
+            countTypes = CountTypes.Coven;
+        }
+        if (Main.PlayerStates[pc.PlayerId].IsNecromancer)
+        {
+            countTypes = CountTypes.Coven;
+        }
+
+        if (!AmongUsClient.Instance.AmHost) return;
+        var msg = new RpcRemoveSubRole(PlayerControl.LocalPlayer.NetId, PlayerId, addOn);
+        RpcUtils.LateBroadcastReliableMessage(msg);
+
     }
 
     public void SetDead()
@@ -284,13 +347,20 @@ public class PlayerState(byte playerId)
         Logger.Msg($"Player {PlayerId} was dead, activated from: {callerClassName}.{callerMethodName}", "PlayerState.SetDead()");
 
         IsDead = true;
-        if (AmongUsClient.Instance.AmHost)
+        try
         {
-            RPC.SendDeathReason(PlayerId, deathReason);
-            if (GameStates.IsMeeting && MeetingHud.Instance.state is MeetingHud.VoteStates.Discussion or MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)
+            if (AmongUsClient.Instance.AmHost)
             {
-                MeetingHud.Instance.CheckForEndVoting();
+                RPC.SendDeathReason(PlayerId, deathReason);
+                if (GameStates.IsMeeting && MeetingHud.Instance.state is MeetingHud.VoteStates.Discussion or MeetingHud.VoteStates.NotVoted or MeetingHud.VoteStates.Voted)
+                {
+                    MeetingHud.Instance.CheckForEndVoting();
+                }
             }
+        }
+        catch (Exception e)
+        {
+            Logger.Error(e.StackTrace, "SetDead()");
         }
     }
     public bool IsSuicide => deathReason == DeathReason.Suicide;

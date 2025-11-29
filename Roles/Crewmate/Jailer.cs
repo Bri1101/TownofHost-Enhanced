@@ -1,6 +1,7 @@
 using AmongUs.GameOptions;
 using Hazel;
 using TOHE.Modules;
+using TOHE.Modules.Rpc;
 using UnityEngine;
 using static TOHE.Options;
 using static TOHE.Translator;
@@ -75,12 +76,8 @@ internal class Jailer : RoleBase
 
     public static void SendRPC(byte jailerId)
     {
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.SyncJailerData, SendOption.Reliable, -1);
-        writer.Write(jailerId);
-        writer.WritePacked(JailerTarget[jailerId]);
-        writer.Write(JailerHasExe[jailerId]);
-        writer.Write(JailerDidVote[jailerId]);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+        var msg = new RpcSyncJailerData(PlayerControl.LocalPlayer.NetId, jailerId, JailerTarget[jailerId], JailerHasExe[jailerId], JailerDidVote[jailerId]);
+        RpcUtils.LateBroadcastReliableMessage(msg);
     }
 
     public static void ReceiveRPC(MessageReader reader)
@@ -131,9 +128,15 @@ internal class Jailer : RoleBase
         }
     }
 
+    public override void AfterMeetingTasks()
+    {
+        JailerTarget.Clear();
+    }
+
     public override void OnVote(PlayerControl voter, PlayerControl target)
     {
         if (voter == null || target == null) return;
+        if (!voter.Is(CustomRoles.Jailer)) return;
         if (JailerDidVote.TryGetValue(voter.PlayerId, out var didVote) && didVote) return;
         if (JailerTarget.TryGetValue(voter.PlayerId, out var jTarget) && jTarget == byte.MaxValue) return;
 

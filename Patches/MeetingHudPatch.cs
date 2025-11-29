@@ -27,7 +27,7 @@ class CheckForEndVotingPatch
     {
         if (!AmongUsClient.Instance.AmHost) return true;
 
-        //Meeting Skip with vote counting on keystroke (m + delete)
+        //Meeting Skip with vote counting on keystroke (F6)
         var shouldSkip = false;
         if (Input.GetKeyDown(KeyCode.F6))
         {
@@ -133,6 +133,11 @@ class CheckForEndVotingPatch
                     {
                         pc.GetRoleClass()?.OnVote(pc, voteTarget); // Role has voted
                         voteTarget.GetRoleClass()?.OnVoted(voteTarget, pc); // Role is voted
+
+                        if (Lich.IsCursed(pc))
+                        {
+                            Lich.OnTargetVote(pc);
+                        }
 
                         if (voteTarget.Is(CustomRoles.Aware))
                         {
@@ -424,6 +429,9 @@ class CheckForEndVotingPatch
         var exileId = exiledPlayer.PlayerId;
         if (exileId is < 0 or > 254) return;
 
+        if (Options.PlayEjectSfx.GetBool())
+            CustomSoundsManager.RPCPlayCustomSoundAll("Dramatic");
+
         var realName = Main.AllPlayerNames[exiledPlayer.PlayerId];
         Main.LastVotedPlayer = realName;
 
@@ -647,12 +655,14 @@ class CheckForEndVotingPatch
             }
         }
 
+        Lovers.OnCheckForEndVoting(deathReason, playerIds);
+
         foreach (var playerId in playerIds)
         {
-            if (CustomRoles.Lovers.IsEnable() && deathReason == PlayerState.DeathReason.Vote && !Main.isLoversDead && Main.LoversPlayers.FirstOrDefault(lp => lp.PlayerId == playerId) != null)
-            {
-                FixedUpdateInNormalGamePatch.LoversSuicide(playerId, true);
-            }
+            // if (CustomRoles.Lovers.IsEnable() && deathReason == PlayerState.DeathReason.Vote && !Main.isLoversDead && Main.LoversPlayers.FirstOrDefault(lp => lp.PlayerId == playerId) != null)
+            // {
+            //     FixedUpdateInNormalGamePatch.LoversSuicide(playerId, true);
+            // }
 
             RevengeOnExile(playerId);
         }
@@ -788,7 +798,7 @@ class CastVotePatch
             }
 
 
-            if (!voter.GetRoleClass().HasVoted && voter.GetRoleClass().CheckVote(voter, target) == false)
+            if (!voter.GetRoleClass().HasVoted && !Main.Daybreak && voter.GetRoleClass().CheckVote(voter, target) == false)
             {
                 Logger.Info($"Canceling {voter.GetRealName()}'s vote because of {voter.GetCustomRole()}", "CastVotePatch.RoleBase.CheckVote");
                 voter.GetRoleClass().HasVoted = true;
@@ -1042,9 +1052,12 @@ class MeetingHudStartPatch
                 Main.AllAlivePlayerControls.Where(x => x.GetRealKiller()?.PlayerId == pc.PlayerId).Do(x => MimicMsg += $"\n{x.GetNameWithRole(true)}");
         }
 
+        if (Rat.IsEnable)
+            Rat.GetMessage();
+
         if (Eavesdropper.IsEnable)
             Eavesdropper.GetMessage();
-
+            
         // Add Mimic msg
         if (MimicMsg != "")
         {
@@ -1172,14 +1185,24 @@ class MeetingHudStartPatch
                 if (Illusionist.IsNonCovIllusioned(targetId))
                 {
                     var randomRole = CustomRolesHelper.AllRoles.Where(role => role.IsEnable() && !role.IsAdditionRole() && role.IsCoven()).ToList().RandomElement();
-                    blankRT.Clear().Append(ColorString(GetRoleColor(randomRole), GetString(randomRole.ToString())));
+                    blankRT.Clear().Append(ColorString(GetRoleColor(randomRole), GetString(randomRole.GetActualRoleName())));
                     if (randomRole.GetStaticRoleClass().IsMethodOverridden("GetProgressText")) // Roles with Ability Uses
                     {
                         blankRT.Append(randomRole.GetStaticRoleClass().GetProgressText(playerId, false));
                     }
                     result.Clear().Append($"<size={roleTextMeeting.fontSize}>{blankRT}</size>");
                 }
+                // if (Lich.IsCursed(target) && Lich.IsDeceived(player, target))
+                // {
+                //     blankRT.Clear().Append(CustomRoles.Lich.ToColoredString());
+                //     result.Clear().Append($"<size={roleTextMeeting.fontSize}>{blankRT}</size>");
+                // }
                 roleTextMeeting.text = result.ToString();
+            }
+            if (player.IsAlive() && !target.AmOwner && ExtendedPlayerControl.KnowRoleTarget(player, target) && Lich.IsCursed(target) && Lich.IsDeceived(player, target))
+            {
+                string blankRT = CustomRoles.Lich.ToColoredString();
+                roleTextMeeting.text = $"<size={roleTextMeeting.fontSize}>{blankRT}</size>";
             }
 
             var suffixBuilder = new StringBuilder(32);
@@ -1272,7 +1295,7 @@ class MeetingHudStartPatch
             var seerRoleClass = seer.GetRoleClass();
 
             // if based role is Shapeshifter/Phantom and is Desync Shapeshifter/Phantom
-            if (seerRoleClass?.ThisRoleBase.GetRoleTypes() is RoleTypes.Shapeshifter or RoleTypes.Phantom && seer.HasDesyncRole())
+            if (seerRoleClass?.ThisRoleBase.GetRoleTypes() is RoleTypes.Shapeshifter or RoleTypes.Phantom or RoleTypes.Impostor && seer.HasDesyncRole())
             {
                 // When target is impostor, set name color as white
                 target.cosmetics.SetNameColor(Color.white);
@@ -1287,7 +1310,7 @@ class MeetingHudStartPatch
 
             var sb = new StringBuilder();
 
-            //pva.NameText.text = target.GetRealName(isMeeting: true);
+            pva.NameText.text = target.GetRealName(isMeeting: true);
             pva.NameText.text = pva.NameText.text.ApplyNameColorData(seer, target, true);
 
             //if (seer.KnowDeathReason(target))
@@ -1310,16 +1333,17 @@ class MeetingHudStartPatch
             }
 
             //bool isLover = false;
-            foreach (var TargetSubRole in target.GetCustomSubRoles().ToArray())
+            foreach (var TargetSubRole in target.GetCustomSubRoles())
             {
                 switch (TargetSubRole)
                 {
                     case CustomRoles.Lovers:
-                        if (seer.Is(CustomRoles.Lovers) || seer.Data.IsDead)
-                        {
-                            sb.Append(CustomRoles.Lovers.GetColoredTextByRole("♥"));
-                            //isLover = true;
-                        }
+                        // if (seer.Is(CustomRoles.Lovers) || seer.Data.IsDead)
+                        // {
+                        //     sb.Append(CustomRoles.Lovers.GetColoredTextByRole("♥"));
+                        //     //isLover = true;
+                        // }
+                        sb.Append(Lovers.GetMarkOthers(seer, target));
                         break;
                     case CustomRoles.Cyber when Cyber.CyberKnown.GetBool():
                         sb.Append(CustomRoles.Cyber.GetColoredTextByRole("★"));
@@ -1330,9 +1354,12 @@ class MeetingHudStartPatch
 
             pva.NameText.text += sb.ToString();
             pva.ColorBlindName.transform.localPosition -= new Vector3(1.35f, 0f, 0f);
+
+
+            pva.TargetPlayerId = target.PlayerId;
         }
 
-        __instance.SortButtons();
+        // __instance.SortButtons();
     }
 }
 [HarmonyPatch(typeof(MeetingHud), nameof(MeetingHud.Update))]
@@ -1368,7 +1395,7 @@ class MeetingHudUpdatePatch
     {
         if (__instance == null || !GameStates.IsInGame) return;
 
-        //Meeting Skip with vote counting on keystroke (m + delete)
+        //Meeting Skip with vote counting on keystroke (F6)
         if (AmongUsClient.Instance.AmHost && Input.GetKeyDown(KeyCode.F6))
         {
             __instance.CheckForEndVoting();

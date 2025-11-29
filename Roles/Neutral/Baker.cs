@@ -24,6 +24,7 @@ internal class Baker : RoleBase
     public static OptionItem FamineStarveCooldown;
     private static OptionItem BTOS2Baker;
     private static OptionItem ApocCanSeeReveals;
+    private static OptionItem RevealsPersist;
     private static OptionItem TransformNoMoreBread;
     private static OptionItem RegenBread;
     public static OptionItem CanVent;
@@ -45,7 +46,8 @@ internal class Baker : RoleBase
         FamineStarveCooldown = FloatOptionItem.Create(Id + 11, "FamineStarveCooldown", new(0f, 180f, 2.5f), 30f, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Baker])
                 .SetValueFormat(OptionFormat.Seconds);
         BTOS2Baker = BooleanOptionItem.Create(Id + 12, "BakerBreadGivesEffects", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Baker]);
-        ApocCanSeeReveals = BooleanOptionItem.Create(Id + 16, "PotionMasterCovenCanSeeReveals", true, TabGroup.NeutralRoles, false).SetParent(BTOS2Baker);
+        ApocCanSeeReveals = BooleanOptionItem.Create(Id + 16, "BakerApocCanSeeReveals", true, TabGroup.NeutralRoles, false).SetParent(BTOS2Baker);
+        RevealsPersist = BooleanOptionItem.Create(Id + 17, "BakerRevealsPersist", true, TabGroup.NeutralRoles, false).SetParent(ApocCanSeeReveals);
         TransformNoMoreBread = BooleanOptionItem.Create(Id + 13, "BakerTransformNoMoreBread", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Baker]);
         CanVent = BooleanOptionItem.Create(Id + 14, "BakerCanVent", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Baker]);
         RegenBread = BooleanOptionItem.Create(Id + 15, "BakerRegenBread", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Baker]);
@@ -77,6 +79,7 @@ internal class Baker : RoleBase
     private static (int, int) BreadedPlayerCount(byte playerId)
     {
         int breaded = 0, all = BreadNeededToTransform.GetInt();
+        if (all == 0 || Main.AllAlivePlayerControls.Length == 0) return (-1, 100);
         foreach (var pc in Main.AllAlivePlayerControls)
         {
             if (pc.PlayerId == playerId) continue;
@@ -137,6 +140,7 @@ internal class Baker : RoleBase
         foreach (var baker in RevealList.Keys)
         {
             if (RevealList[baker].Contains(target.PlayerId)) result = true;
+            if (!baker.GetPlayer().IsAlive() && !RevealsPersist.GetBool()) result = false;
         }
         return result;
     }
@@ -335,6 +339,8 @@ internal class Baker : RoleBase
 
         if (AllHasBread(player) || (TransformNoMoreBread.GetBool() && BreadedPlayerCount(player.PlayerId).Item1 >= Main.AllAlivePlayerControls.Where(x => !x.IsNeutralApocalypse() && !Main.PlayerStates[x.PlayerId].IsNecromancer).Count()))
         {
+            var bread = BreadedPlayerCount(player.PlayerId);
+            Logger.Info($"{player.GetRealName()} transformed to Famine with {bread.Item1}/{bread.Item2} bread", "Baker");
             player.RpcChangeRoleBasis(CustomRoles.Famine);
             player.RpcSetCustomRole(CustomRoles.Famine);
             player.GetRoleClass()?.OnAdd(_Player.PlayerId);
@@ -453,7 +459,7 @@ internal class Famine : RoleBase
             }
             else
             {
-                Main.AfterMeetingDeathPlayers.Remove(pc.PlayerId);
+                if (pc.GetDeathReason() is not PlayerState.DeathReason.Suicide) Main.AfterMeetingDeathPlayers.Remove(pc.PlayerId);
             }
         }
         CheckForEndVotingPatch.TryAddAfterMeetingDeathPlayers(PlayerState.DeathReason.Starved, [.. deathList]);

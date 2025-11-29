@@ -11,6 +11,8 @@ using TOHE.Modules.Rpc;
 using TOHE.Patches;
 using TOHE.Roles.Core;
 using TOHE.Roles.Core.AssignManager;
+using TOHE.Roles.Core.DraftAssign;
+using TOHE.Roles.Crewmate;
 using UnityEngine;
 using static TOHE.Translator;
 
@@ -74,7 +76,7 @@ internal class ChangeRoleSettings
 
             Main.CheckShapeshift.Clear();
             Main.ShapeshiftTarget.Clear();
-            Main.AllKillers.Clear();
+            Witness.AllMurderTresspass.Clear();
             Main.OverDeadPlayerList.Clear();
             Main.UnShapeShifter.Clear();
             Main.DeadPassedMeetingPlayers.Clear();
@@ -265,7 +267,7 @@ internal class StartGameHostPatch
 {
     private static AmongUsClient thiz;
 
-    private static RoleOptionsCollectionV09 RoleOpt => Main.NormalOptions.roleOptions;
+    private static RoleOptionsCollectionV10 RoleOpt => Main.NormalOptions.roleOptions;
     private static Dictionary<RoleTypes, int> RoleTypeNums = [];
     public static void UpdateRoleTypeNums()
     {
@@ -276,7 +278,9 @@ internal class StartGameHostPatch
             { RoleTypes.Shapeshifter, RoleAssign.AddShapeshifterNum },
             { RoleTypes.Noisemaker, RoleAssign.AddNoisemakerNum },
             { RoleTypes.Phantom, RoleAssign.AddPhantomNum },
-            { RoleTypes.Tracker, RoleAssign.AddTrackerNum }
+            { RoleTypes.Tracker, RoleAssign.AddTrackerNum },
+            { RoleTypes.Detective, RoleAssign.AddDetectiveNum },
+            { RoleTypes.Viper, RoleAssign.AddViperNum },
         };
     }
 
@@ -349,6 +353,7 @@ internal class StartGameHostPatch
                         else
                         {
                             thiz.SendLateRejection(clientData.Id, DisconnectReasons.ClientTimeout);
+                            Logger.Info($"{clientData.Id} timed out.", "StartGameHost");
                             clientData.IsReady = true;
                             thiz.OnPlayerLeft(clientData, DisconnectReasons.ClientTimeout);
                         }
@@ -383,7 +388,11 @@ internal class StartGameHostPatch
 
             // Select custom Roles/Add-ons
             EAC.OriginalRoles = [];
-            RoleAssign.StartSelect();
+
+            if (Options.DraftMode.GetBool() && Options.devEnableDraft)
+                DraftAssign.StartSelect();
+            else
+                RoleAssign.StartSelect();
             AddonAssign.StartSelect();
 
             // Set count Vanilla Roles
@@ -439,6 +448,8 @@ internal class StartGameHostPatch
                     RoleTypes.Noisemaker => CustomRoles.Noisemaker,
                     RoleTypes.Phantom => CustomRoles.Phantom,
                     RoleTypes.Tracker => CustomRoles.Tracker,
+                    RoleTypes.Detective => CustomRoles.Detective,
+                    RoleTypes.Viper => CustomRoles.Viper,
                     _ => CustomRoles.NotAssigned
                 };
                 if (role == CustomRoles.NotAssigned) Logger.SendInGame(string.Format(GetString("Error.InvalidRoleAssignment"), pc?.Data?.PlayerName));
@@ -466,7 +477,7 @@ internal class StartGameHostPatch
                 if (Options.CurrentGameMode == CustomGameMode.Standard)
                 {
                     AddonAssign.StartAssigningNarc();
-                    AddonAssign.InitAndStartAssignLovers();
+                    // AddonAssign.InitAndStartAssignLovers();
                     AddonAssign.StartSortAndAssign();
                 }
             }
@@ -504,7 +515,7 @@ internal class StartGameHostPatch
                 roleClass?.OnAdd(pc.PlayerId);
 
                 // If based role is Shapeshifter
-                if (roleClass?.ThisRoleBase.GetRoleTypes() == RoleTypes.Shapeshifter) Main.CheckShapeshift.Add(pc.PlayerId, false);
+                if (roleClass?.ThisRoleBase.GetRoleTypes() == RoleTypes.Shapeshifter) Main.CheckShapeshift[pc.PlayerId] = false;
             }
 
         EndOfSelectRolePatch:

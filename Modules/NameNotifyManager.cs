@@ -9,10 +9,11 @@ public static class NameNotifyManager
     public static readonly Dictionary<byte, (string Text, long TimeStamp)> Notice = [];
     public static void Reset() => Notice.Clear();
     public static bool Notifying(this PlayerControl pc) => Notice.ContainsKey(pc.PlayerId);
-    public static void Notify(this PlayerControl pc, string text, float time = 5f, bool sendInLog = true)
+    public static void Notify(this PlayerControl pc, string text, float time = 5f, bool sendInLog = true, bool hasPriority = false)
     {
         if (!AmongUsClient.Instance.AmHost || pc == null) return;
         if (!GameStates.IsInTask) return;
+        if (pc.Notifying() && !hasPriority) return;
         if (!text.Contains("<color=") && !text.Contains("</color>")) text = Utils.ColorString(Color.white, text);
         if (!text.Contains("<size=")) text = $"<size=1.9>{text}</size>";
 
@@ -51,10 +52,10 @@ public static class NameNotifyManager
         if (player == null || !AmongUsClient.Instance.AmHost || !player.IsNonHostModdedClient()) return;
 
         var message = new RpcSyncNameNotify(
-            PlayerControl.LocalPlayer.NetId, 
+            PlayerControl.LocalPlayer.NetId,
             playerId,
             Notice.ContainsKey(playerId),
-            Notice.ContainsKey(playerId) ? Notice[playerId].Text : string.Empty, 
+            Notice.ContainsKey(playerId) ? Notice[playerId].Text : string.Empty,
             Notice.ContainsKey(playerId) ? Notice[playerId].TimeStamp - Utils.GetTimeStamp() : 0f);
         RpcUtils.LateSpecificSendMessage(message, player.OwnerId);
     }

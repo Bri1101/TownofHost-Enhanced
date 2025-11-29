@@ -1,5 +1,6 @@
 using System;
 using TOHE.Modules;
+using TOHE.Modules.Rpc;
 using UnityEngine;
 
 namespace TOHE;
@@ -212,7 +213,7 @@ public abstract class OptionItem
             opt.oldValue = opt.Value = CurrentValue;
         }
     }
-    public virtual void SetValue(int afterValue, bool doSave, bool doSync = true)
+    public virtual void SetValue(int afterValue, bool doSave, bool doSync = true, bool isSingle = false)
     {
         int beforeValue = CurrentValue;
         if (IsSingleValue)
@@ -224,12 +225,27 @@ public abstract class OptionItem
             AllValues[CurrentPreset] = afterValue;
         }
 
+        if (beforeValue != afterValue)
+        {
+            Logger.Info($"Set value {Id} {Name}: {beforeValue} => {afterValue}", "OptionItem SetValue");
+        }
+
         CallUpdateValueEvent(beforeValue, afterValue);
         Refresh();
         if (doSync)
         {
-            SyncAllOptions();
-            // RPC.SyncCustomSettingsRPCforOneOption(this);
+            if (isSingle)
+            {
+                if (AmongUsClient.Instance.AmHost && PlayerControl.LocalPlayer != null && Main.AllPlayerControls.Any(pc => pc.IsNonHostModdedClient()))
+                {
+                    var message = new RpcSyncCustomSettingsSingle(PlayerControl.LocalPlayer.NetId, Id, afterValue);
+                    RpcUtils.LateBroadcastReliableMessage(message);
+                }
+            }
+            else
+            {
+                SyncAllOptions();
+            }
         }
         if (doSave)
         {
@@ -252,6 +268,15 @@ public abstract class OptionItem
 
         CallUpdateValueEvent(beforeValue, afterValue);
         Refresh();
+    }
+    public virtual void SetValue(object afterValue, bool doSync = true)
+    {
+        if (afterValue is int iVal)
+            SetValue(iVal, doSync);
+        else
+        {
+            Logger.Error($"Invalid value type: {afterValue}", "OptionItem.SetValue");
+        }
     }
 
     public static OptionItem operator ++(OptionItem item)

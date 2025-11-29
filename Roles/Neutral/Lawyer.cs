@@ -1,6 +1,7 @@
 using AmongUs.GameOptions;
 using Hazel;
 using TOHE.Modules.Rpc;
+using TOHE.Roles.AddOns.Common;
 using TOHE.Roles.Core;
 using static TOHE.Options;
 using static TOHE.Translator;
@@ -33,7 +34,6 @@ internal class Lawyer : RoleBase
     public static HashSet<byte> TargetList = [];
     private byte TargetId;
 
-    [Obfuscation(Exclude = true)]
     public static readonly List<string> ChangeRoles = new List<string>();
     public static readonly CustomRoles[] CRoleChangeRoles =
     [
@@ -67,6 +67,7 @@ internal class Lawyer : RoleBase
         KnowTargetRole = BooleanOptionItem.Create(Id + 14, "KnowTargetRole", false, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lawyer]);
         TargetKnowsLawyer = BooleanOptionItem.Create(Id + 15, "TargetKnowsLawyer", false, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lawyer]);
         HasImpostorVision = BooleanOptionItem.Create(Id + 20, GeneralOption.ImpostorVision, true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lawyer]);
+        ChangeRoles.Clear();
         CRoleChangeRoles.ForEach(x => ChangeRoles.Add(x.ToColoredString()));
         ShouldChangeRoleAfterTargetDeath = BooleanOptionItem.Create(Id + 17, "LaywerShouldChangeRoleAfterTargetKilled", true, TabGroup.NeutralRoles, false).SetParent(CustomRoleSpawnChances[CustomRoles.Lawyer]);
         ChangeRolesAfterTargetKilled = StringOptionItem.Create(Id + 16, "LawyerChangeRolesAfterTargetKilled", ChangeRoles.ToArray(), 1, TabGroup.NeutralRoles, false, useGetString: false).SetParent(ShouldChangeRoleAfterTargetDeath);
@@ -97,7 +98,7 @@ internal class Lawyer : RoleBase
                 else if (!CanTargetJester.GetBool() && target.Is(CustomRoles.Jester)) continue;
                 else if (target.Is(Custom_Team.Neutral) && !target.IsNeutralKiller() && !target.Is(CustomRoles.Jester) && !target.IsNeutralApocalypse()) continue;
                 if (target.GetCustomRole() is CustomRoles.GM or CustomRoles.SuperStar or CustomRoles.NiceMini or CustomRoles.EvilMini) continue;
-                if (lawyer.Is(CustomRoles.Lovers) && target.Is(CustomRoles.Lovers)) continue;
+                if (Lovers.AreLovers(lawyer, target)) continue;
 
                 targetList.Add(target);
             }
@@ -158,7 +159,7 @@ internal class Lawyer : RoleBase
         }
     }
 
-    private bool IsTarget(byte playerId) => TargetId == playerId;
+    public bool IsTarget(byte playerId) => TargetId == playerId;
     public byte GetTargetId() => TargetId;
 
     public override bool HasTasks(NetworkedPlayerInfo player, CustomRoles role, bool ForRecompute)

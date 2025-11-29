@@ -3,6 +3,7 @@ using System;
 using System.Text.RegularExpressions;
 using TOHE.Modules;
 using TOHE.Modules.ChatManager;
+using TOHE.Modules.Rpc;
 using TOHE.Roles.Coven;
 using TOHE.Roles.Double;
 using UnityEngine;
@@ -31,11 +32,13 @@ internal class Judge : RoleBase
     private static OptionItem CanTrialEnchanted;
     private static OptionItem CanTrialCrewKilling;
     private static OptionItem CanTrialNeutralB;
+    private static OptionItem CanTrialNeutralP;
     private static OptionItem CanTrialNeutralK;
     private static OptionItem CanTrialNeutralE;
     private static OptionItem CanTrialNeutralC;
     private static OptionItem CanTrialNeutralA;
     private static OptionItem CanTrialCoven;
+    private static OptionItem CanTrialAdmired;
 
     private static readonly Dictionary<byte, int> TrialLimitMeeting = [];
     private static readonly Dictionary<byte, int> TrialLimitGame = [];
@@ -55,11 +58,13 @@ internal class Judge : RoleBase
         CanTrialEnchanted = BooleanOptionItem.Create(Id + 24, "JudgeCanTrialEnchanted", true, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
         CanTrialCrewKilling = BooleanOptionItem.Create(Id + 13, "JudgeCanTrialnCrewKilling", true, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
         CanTrialNeutralB = BooleanOptionItem.Create(Id + 14, "JudgeCanTrialNeutralB", false, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
+        CanTrialNeutralP = BooleanOptionItem.Create(Id + 27, "JudgeCanTrialNeutralP", false, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
         CanTrialNeutralE = BooleanOptionItem.Create(Id + 17, "JudgeCanTrialNeutralE", false, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
         CanTrialNeutralC = BooleanOptionItem.Create(Id + 18, "JudgeCanTrialNeutralC", false, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
         CanTrialNeutralK = BooleanOptionItem.Create(Id + 15, "JudgeCanTrialNeutralK", true, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
         CanTrialNeutralA = BooleanOptionItem.Create(Id + 22, "JudgeCanTrialNeutralA", true, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
         CanTrialCoven = BooleanOptionItem.Create(Id + 23, "JudgeCanTrialCoven", true, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
+        CanTrialAdmired = BooleanOptionItem.Create(Id + 26, "JudgeCanTrialAdmired", true, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge]);
         TryHideMsg = BooleanOptionItem.Create(Id + 11, "JudgeTryHideMsg", true, TabGroup.CrewmateRoles, false).SetParent(Options.CustomRoleSpawnChances[CustomRoles.Judge])
             .SetColor(Color.green);
     }
@@ -191,8 +196,8 @@ internal class Judge : RoleBase
                     pc.ShowInfoMessage(isUI, GetString("GuessSolsticer"));
                     return true;
                 }
+                else if (target.Is(CustomRoles.Admired) && !CanTrialAdmired.GetBool()) judgeSuicide = true;
                 else if (target.IsTransformedNeutralApocalypse()) judgeSuicide = true;
-                else if (target.Is(CustomRoles.Trickster)) judgeSuicide = true;
                 else if (Medic.IsProtected(target.PlayerId) && !Medic.GuesserIgnoreShield.GetBool())
                 {
                     pc.ShowInfoMessage(isUI, GetString("GuessShielded"));
@@ -204,6 +209,7 @@ internal class Judge : RoleBase
                     return true;
                 }
                 else if (pc.IsAnySubRole(x => x.IsConverted())) judgeSuicide = false;
+                else if (target.Is(CustomRoles.Trickster)) judgeSuicide = true;
                 else if (target.Is(CustomRoles.Rascal)) judgeSuicide = false;
                 else if (target.Is(CustomRoles.Narc)) judgeSuicide = true;
                 else if ((target.Is(CustomRoles.Sidekick) || target.Is(CustomRoles.Recruit)) && CanTrialSidekick.GetBool()) judgeSuicide = false;
@@ -215,6 +221,7 @@ internal class Judge : RoleBase
                 else if (target.GetCustomRole().IsCrewKiller() && CanTrialCrewKilling.GetBool()) judgeSuicide = false;
                 else if (target.GetCustomRole().IsNK() && CanTrialNeutralK.GetBool()) judgeSuicide = false;
                 else if (target.GetCustomRole().IsNB() && CanTrialNeutralB.GetBool()) judgeSuicide = false;
+                else if (target.GetCustomRole().IsNP() && CanTrialNeutralP.GetBool()) judgeSuicide = false;
                 else if (target.GetCustomRole().IsNE() && CanTrialNeutralE.GetBool()) judgeSuicide = false;
                 else if (target.GetCustomRole().IsNC() && CanTrialNeutralC.GetBool()) judgeSuicide = false;
                 else if (target.GetCustomRole().IsNA() && CanTrialNeutralA.GetBool()) judgeSuicide = false;
@@ -309,9 +316,8 @@ internal class Judge : RoleBase
 
     private static void SendRPC(byte targetId)
     {
-        MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)CustomRPC.Judge, SendOption.Reliable);
-        writer.Write(targetId);
-        AmongUsClient.Instance.FinishRpcImmediately(writer);
+        var msg = new RpcJudge(PlayerControl.LocalPlayer.NetId, targetId);
+        RpcUtils.LateBroadcastReliableMessage(msg);
     }
     public static void ReceiveRPC_Custom(MessageReader reader, PlayerControl pc)
     {

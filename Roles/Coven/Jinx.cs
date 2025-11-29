@@ -139,7 +139,9 @@ internal class Jinx : CovenManager
         if (killerRole is CustomRoles.Taskinator
             or CustomRoles.Bodyguard
             or CustomRoles.Veteran
-            or CustomRoles.Deputy)
+            or CustomRoles.Deputy
+            or CustomRoles.Crusader
+            or CustomRoles.Jinx)
             return false;
 
         if (killer.GetCustomRole().IsCovenTeam() && !CovenCanDieToJinx.GetBool()) return false;
@@ -174,7 +176,7 @@ internal class Jinx : CovenManager
     public override string GetMarkOthers(PlayerControl seer, PlayerControl target, bool isForMeeting = false)
     {
         if (_Player == null) return string.Empty;
-        if (IsJinxed(target.PlayerId) && ((seer.GetCustomRole().IsCovenTeam() && seer.PlayerId != _Player.PlayerId) || !seer.IsAlive()))
+        if (IsJinxed(target.PlayerId) && ((seer.GetCustomRole().IsCovenTeam() && seer.PlayerId != _Player.PlayerId) || !seer.IsAlive() && seer.PlayerId != _Player.PlayerId))
         {
             return ColorString(GetRoleColor(CustomRoles.Jinx), "⌘");
         }

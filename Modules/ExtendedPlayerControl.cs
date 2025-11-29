@@ -731,9 +731,9 @@ static class ExtendedPlayerControl
             player.CheckVanish();
             return;
         }
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.CheckVanish, RpcSendOption, seer.GetClientId());
-        messageWriter.Write(0); // not used, lol
-        AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+
+        var message = new RpcCheckVanish(player.NetId);
+        RpcUtils.LateSpecificSendMessage(message, seer.OwnerId);
     }
     public static void RpcStartVanishDesync(this PlayerControl player, PlayerControl seer)
     {
@@ -742,8 +742,9 @@ static class ExtendedPlayerControl
             player.SetRoleInvisibility(true, false, true);
             return;
         }
-        MessageWriter msg = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.StartVanish, RpcSendOption, seer.GetClientId());
-        AmongUsClient.Instance.FinishRpcImmediately(msg);
+
+        var message = new RpcVanish(player.NetId);
+        RpcUtils.LateSpecificSendMessage(message, seer.OwnerId);
     }
     public static void RpcCheckAppearDesync(this PlayerControl player, bool shouldAnimate, PlayerControl seer)
     {
@@ -752,9 +753,9 @@ static class ExtendedPlayerControl
             player.CheckAppear(shouldAnimate);
             return;
         }
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.CheckAppear, RpcSendOption, seer.GetClientId());
-        messageWriter.Write(shouldAnimate);
-        AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+
+        var message = new RpcCheckAppear(player.NetId, shouldAnimate);
+        RpcUtils.LateSpecificSendMessage(message, seer.OwnerId);
     }
     public static void RpcStartAppearDesync(this PlayerControl player, bool shouldAnimate, PlayerControl seer)
     {
@@ -764,9 +765,8 @@ static class ExtendedPlayerControl
             return;
         }
 
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(player.NetId, (byte)RpcCalls.StartAppear, RpcSendOption, seer.GetClientId());
-        messageWriter.Write(shouldAnimate);
-        AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+        var message = new RpcAppear(player.NetId, shouldAnimate);
+        RpcUtils.LateSpecificSendMessage(message, seer.OwnerId);
     }
     public static void RpcCheckAppear(this PlayerControl player, bool shouldAnimate)
     {
@@ -782,10 +782,9 @@ static class ExtendedPlayerControl
             killer.MurderPlayer(target, MurderResultFlags.Succeeded);
             return;
         }
-        MessageWriter messageWriter = AmongUsClient.Instance.StartRpcImmediately(killer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, seer.GetClientId());
-        messageWriter.WriteNetObject(target);
-        messageWriter.Write((int)MurderResultFlags.Succeeded);
-        AmongUsClient.Instance.FinishRpcImmediately(messageWriter);
+
+        var message = new RpcMurderPlayer(killer.NetId, target.NetId, MurderResultFlags.Succeeded);
+        RpcUtils.LateSpecificSendMessage(message, seer.GetClientId(), SendOption.Reliable);
     } //Must provide seer, target
     public static void RpcSpecificProtectPlayer(this PlayerControl killer, PlayerControl target = null, int colorId = 0)
     {
@@ -1028,7 +1027,7 @@ static class ExtendedPlayerControl
     }
 
     public static float GetKillDistances(bool ovverideValue = false, int newValue = 2)
-        => NormalGameOptionsV09.KillDistances[Mathf.Clamp(ovverideValue ? newValue : Main.NormalOptions.KillDistance, 0, 2)];
+        => NormalGameOptionsV10.KillDistances[Mathf.Clamp(ovverideValue ? newValue : Main.NormalOptions.KillDistance, 0, 2)];
 
     public static void MarkDirtySettings(this PlayerControl player)
     {
@@ -1266,6 +1265,8 @@ static class ExtendedPlayerControl
         {
             Main.AllPlayerKillCooldown[player.PlayerId] = 0.3f;
         }
+        
+        Logger.Info($"Set {player.name} cooldown to {Main.AllPlayerKillCooldown[player.PlayerId]}", "ResetKillCooldown");
     }
     public static bool IsNonCrewSheriff(this PlayerControl sheriff)
     {
@@ -1361,6 +1362,7 @@ static class ExtendedPlayerControl
     public static bool IsNeutralBenign(this PlayerControl player) => player.GetCustomRole().IsNB();
     public static bool IsNeutralEvil(this PlayerControl player) => player.GetCustomRole().IsNE();
     public static bool IsNeutralChaos(this PlayerControl player) => player.GetCustomRole().IsNC();
+    public static bool IsNeutralParaih(this PlayerControl player) => player.GetCustomRole().IsNP();
     public static bool IsNeutralApocalypse(this PlayerControl player) => player.GetCustomRole().IsNA();
     public static bool IsTransformedNeutralApocalypse(this PlayerControl player) => player.GetCustomRole().IsTNA();
     public static bool IsNonNeutralKiller(this PlayerControl player) => player.GetCustomRole().IsNonNK();
@@ -1392,7 +1394,8 @@ static class ExtendedPlayerControl
         else if (Options.SeeEjectedRolesInMeeting.GetBool() && Main.PlayerStates[target.PlayerId].deathReason == PlayerState.DeathReason.Vote) return true;
         else if (Altruist.HasEnabled && seer.IsMurderedThisRound()) return false;
         else if (seer.GetCustomRole() == target.GetCustomRole() && seer.GetCustomRole().IsNK()) return true;
-        else if (Options.LoverKnowRoles.GetBool() && seer.Is(CustomRoles.Lovers) && target.Is(CustomRoles.Lovers)) return true;
+        else if (Lovers.LoverKnowRoles.GetBool() && seer.IsLoverWith(target)) return true;
+        else if (Cupid.LoversKnowCupid.GetBool() && Cupid.IsCupidLover(target, seer)) return true;
         else if (Options.ImpsCanSeeEachOthersRoles.GetBool() && seer.CheckImpCanSeeAllies(CheckAsSeer: true) && target.CheckImpCanSeeAllies(CheckAsTarget: true)) return true;
         else if (Madmate.MadmateKnowWhosImp.GetBool() && seer.Is(CustomRoles.Madmate) && target.CheckImpCanSeeAllies(CheckAsTarget: true)) return true;
         else if (Madmate.ImpKnowWhosMadmate.GetBool() && target.Is(CustomRoles.Madmate) && seer.CheckImpCanSeeAllies(CheckAsSeer: true)) return true;
@@ -1421,6 +1424,7 @@ static class ExtendedPlayerControl
         {
             if (Nemesis.PreventKnowRole(seer)) return false;
             if (Retributionist.PreventKnowRole(seer)) return false;
+            if (Doppelganger.PreventKnowRole(seer)) return false;
 
             if (!Options.GhostCanSeeOtherRoles.GetBool())
                 return false;
@@ -1461,6 +1465,7 @@ static class ExtendedPlayerControl
         {
             if (Nemesis.PreventKnowRole(seer)) return false;
             if (Retributionist.PreventKnowRole(seer)) return false;
+            if (Doppelganger.PreventKnowRole(seer)) return false;
 
             if (!Options.GhostCanSeeOtherRoles.GetBool())
                 return false;
@@ -1612,6 +1617,11 @@ static class ExtendedPlayerControl
     public static void SetDeathReason(this byte targetId, PlayerState.DeathReason reason)
     {
         Main.PlayerStates[targetId].deathReason = reason;
+    }
+    public static PlayerState.DeathReason GetDeathReason(this PlayerControl target) => target.PlayerId.GetDeathReason();
+    public static PlayerState.DeathReason GetDeathReason(this byte targetId)
+    {
+        return Main.PlayerStates[targetId].deathReason;
     }
 
     public static bool Is(this PlayerControl target, CustomRoles role) =>
